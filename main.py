@@ -25,11 +25,11 @@ def download_games():
         print("Downloaded game", i)
 
 
-runners_scored_re = re.compile(r'^(.*) (:?scores!|advances on the sacrifice\.|steals fourth base!)', flags=re.MULTILINE)
+runners_scored_re = re.compile(r'^(.+) (?:scores!|advances on the sacrifice\.|steals fourth base!)', flags=re.MULTILINE)
 out_without_reaching_re = re.compile(
     r'hit a (?:ground |fly)out|strikes out (?:looking|swinging)|swings \d times to strike out willingly')
 out_at_base_re = re.compile(
-    r'^(.*) (?:out at (?:first|second|third|fourth) base\.|gets caught stealing)|A murder of Crows ambush (.*)!$',
+    r'^(.+) (?:out at (?:first|second|third|fourth) base\.|gets caught stealing)|A murder of Crows ambush (.+)!$',
     flags=re.MULTILINE)
 
 
@@ -54,7 +54,9 @@ class GameState(object):
 
     number_of_bases = 4  # Someone can update this for fifth base if they want
 
-    def __init__(self):
+    def __init__(self, optimistic=True):
+        self.optimistic = optimistic
+        
         self.inning = 0
         self.top_of_inning = True
         self.balls = 0
@@ -70,7 +72,7 @@ class GameState(object):
 
         self.borrowed_time = False
         self.reached_on_borrowed_time = []  # Intentionally a list, not a set, because of Kennedy Loser
-        self.outs_without_borrowed_time = 0
+        self.potentially_out_by_scoring_during_borrowed_time = []
         self.current_batter = None
         self.runs_by_reaching_on_borrowed_time = 0
         self.runs_scored_on_borrowed_time = 0
@@ -115,7 +117,7 @@ class GameState(object):
         self.clear_bases()
         self.outs = 0
         self.reached_on_borrowed_time = []
-        self.outs_without_borrowed_time = 0
+        self.potentially_out_by_scoring_during_borrowed_time = []
         self.borrowed_time = False
 
     def consume_game_event(self, update):
@@ -256,9 +258,19 @@ class GameState(object):
                 assert len(runners_out) == num_out - 1
             else:
                 assert len(runners_out) == num_out
-            for runner in runners_out:
+            for runnertup in runners_out:
+                if isinstance(runnertup, tuple):
+                    runner = runnertup[0] if runnertup[0] != '' else runnertup[1]
+                else:
+                    runner = runnertup
+                assert runner != ''
                 try:
                     self.reached_on_borrowed_time.remove(runner)
+                except ValueError:
+                    pass
+
+                try:
+                    self.potentially_out_by_scoring_during_borrowed_time.remove(runner)
                 except ValueError:
                     pass
 
@@ -325,8 +337,10 @@ class GameState(object):
     def score_runs(self, runs_scored, update):
         runs_by_reaching_on_borrowed_time = 0
         if "home run!" in update['lastUpdate'] or "grand slam!" in update['lastUpdate']:
+            runners_who_scored = [self.player_id_to_name[player_id] for player_id in self.baserunners_prev]
             # During a home run, all batters who reached on borrowed time (and are still on) score
             runs_by_reaching_on_borrowed_time += len(self.reached_on_borrowed_time)
+            self.reached_on_borrowed_time = []
         else:
             runners_who_scored = runners_scored_re.findall(update['lastUpdate'])
             assert len(runners_who_scored) == runs_scored
@@ -342,21 +356,26 @@ class GameState(object):
         else:
             self.runs_home += runs_scored
 
-        # Every player who reached on borrowed time would otherwise have been an out. Therefore the number of
-        # outs without borrowed time is self.outs + len(self.reached_on_borrowed_time). If that's above 3,
-        # then *all* runs scored are on borrowed time.
-        if self.borrowed_time or self.outs + len(self.reached_on_borrowed_time) >= 3:
+        if self.borrowed_time or self.outs_without_borrowed_time() >= 3:
             self.runs_scored_on_borrowed_time += runs_scored
+            self.potentially_out_by_scoring_during_borrowed_time.extend(runners_who_scored)
 
             self.double_borrowed_runs += runs_by_reaching_on_borrowed_time
 
             # An run is *recoverable* if it was scored during borrowed time, but there's more time in the inning
             # to make it up. This happens if there would be 1 or 0 outs without 4th strike -- as soon as you
-            # enter borrowed time on the 2nd out, you would never get any more time if not for 4th strike. However,
-            # runs scored by reaching on borrowed time can't be recovered like this -- the player wasn't there in the
-            # first place.
-            if self.outs + len(self.reached_on_borrowed_time) < 2:
+            # enter borrowed time with 2 outs on the board, you would never get any more time if not for 4th strike.
+            # However, runs scored by reaching on borrowed time can't be recovered like this, since the player wasn't
+            # there in the first place.
+            if self.outs_without_borrowed_time() < 2:
                 self.recoverable_runs += runs_scored - runs_by_reaching_on_borrowed_time
+
+    def outs_without_borrowed_time(self):
+        result = self.outs + len(self.reached_on_borrowed_time)
+        # Any run scored during borrowed time could've been an out instead (by Caught Stealing, if nothing else)
+        if not self.optimistic:
+            result += len(self.potentially_out_by_scoring_during_borrowed_time)
+        return result
 
     def hit(self, update):
         print("Hit")
@@ -414,12 +433,12 @@ class GameState(object):
     # Not necessarily the opposite of is_clab_bad! If a game would have continued under
     # the simulated circumstances, the simulation cannot continue and so stops it at a tie.
     # In that case, clab is neither good nor bad.
-    def is_clab_good(self):
-        return self.crab_runs() > self.not_crab_runs()
+    def is_clab_good(self, adjust_runs=True, adjust_runs_optimist=True):
+        return self.crab_runs(adjust_runs, adjust_runs_optimist) > self.not_crab_runs()
 
     # Not necessarily the opposite of is_clab_good! See comment over is_clab_good.
-    def is_clab_bad(self):
-        return self.crab_runs() < self.not_crab_runs()
+    def is_clab_bad(self, adjust_runs=True, adjust_runs_optimist=True):
+        return self.crab_runs(adjust_runs, adjust_runs_optimist) < self.not_crab_runs()
 
     def crab_runs(self, adjust_runs=True, adjust_runs_optimist=True):
         run_adjustment = 0
@@ -447,8 +466,8 @@ class GameState(object):
 
 
 def simulate_season():
-    clab_good_games = 0
-    clab_bad_games = 0
+    games_won_optimist, games_won_pessimist = 0, 0
+    games_lost_optimist, games_lost_pessimist = 0, 0
     runs_total = 0
     runs_scored_on_borrowed_time = 0
     runs_by_reaching_on_borrowed_time = 0
@@ -456,17 +475,17 @@ def simulate_season():
     recoverable_runs = 0
 
     crab_score = []
-    crab_score_adjusted = []
+    crab_score_adjusted_optimist = []
     crab_score_adjusted_pessimist = []
     opponent_score = []
     for i in range(num_games):
         if i == 24:
             # Chronicle broke for this game so the data does not exist. We scored 0 runs, though, so clab good is not
             # likely under most circumstances
-            clab_bad_games += 1
+            games_lost_optimist += 1
 
             crab_score.append(0)
-            crab_score_adjusted.append(0)
+            crab_score_adjusted_optimist.append(0)
             crab_score_adjusted_pessimist.append(0)
             opponent_score.append(1)
 
@@ -480,29 +499,39 @@ def simulate_season():
         with open(events_file_path, 'r') as events_file:
             events = json.load(events_file)
 
-        state = GameState()
+        optimist_state = GameState(optimistic=True)
+        pessimist_state = GameState(optimistic=False)
 
         for event in events['data']:
-            state.consume(event['data'])
+            optimist_state.consume(event['data'])
+            pessimist_state.consume(event['data'])
 
-        if state.is_clab_good():
-            clab_good_games += 1
-        if state.is_clab_bad():
-            clab_bad_games += 1
+        if optimist_state.is_clab_good(adjust_runs=True, adjust_runs_optimist=True):
+            games_won_optimist += 1
+        if optimist_state.is_clab_bad(adjust_runs=True, adjust_runs_optimist=True):
+            games_lost_optimist += 1
+            
+        if pessimist_state.is_clab_good(adjust_runs=True, adjust_runs_optimist=False):
+            games_won_pessimist += 1
+        if pessimist_state.is_clab_bad(adjust_runs=True, adjust_runs_optimist=False):
+            games_lost_pessimist += 1
 
-        crab_score.append(state.crab_runs(adjust_runs=False))
-        crab_score_adjusted.append(state.crab_runs(adjust_runs=True, adjust_runs_optimist=True))
-        crab_score_adjusted_pessimist.append(state.crab_runs(adjust_runs=True, adjust_runs_optimist=False))
-        opponent_score.append(state.not_crab_runs())
+        crab_score.append(optimist_state.crab_runs(adjust_runs=False))
+        crab_score_adjusted_optimist.append(optimist_state.crab_runs(adjust_runs=True, adjust_runs_optimist=True))
+        crab_score_adjusted_pessimist.append(pessimist_state.crab_runs(adjust_runs=True, adjust_runs_optimist=False))
+        opponent_score.append(optimist_state.not_crab_runs())
 
+        state = optimist_state
         runs_scored_on_borrowed_time += state.runs_scored_on_borrowed_time
         runs_by_reaching_on_borrowed_time += state.runs_by_reaching_on_borrowed_time
         double_borrowed_runs += state.double_borrowed_runs
         recoverable_runs += state.recoverable_runs
         runs_total += state.crab_runs()
 
-    unknown_games = num_games - (clab_good_games + clab_bad_games)
-    print(f"CLAB GOOD: {clab_good_games}, CLAB BAD: {clab_bad_games}, UNKNOWN: {unknown_games}")
+    unknown_games_optimist = num_games - (games_won_optimist + games_lost_optimist)
+    print(f"OPTIMIST: {games_won_optimist}-{games_lost_optimist} ({unknown_games_optimist} unknown)")
+    unknown_games_pessimist = num_games - (games_won_pessimist + games_lost_pessimist)
+    print(f"PESSIMIST: {games_won_pessimist}-{games_lost_pessimist} ({unknown_games_pessimist} unknown)")
     print(runs_total, "runs scored after adjustment")
     print(runs_scored_on_borrowed_time, "runs scored during borrowed time")
     print(runs_by_reaching_on_borrowed_time, "runs scored by players who reached the base because of borrowed time")
@@ -510,7 +539,7 @@ def simulate_season():
                                 "time (i.e. overlap between the previous two categories)")
     print(recoverable_runs, "runs scored during borrowed time which could still have been scored later in the inning")
 
-    plot(np.array(crab_score), np.array(crab_score_adjusted), np.array(crab_score_adjusted_pessimist),
+    plot(np.array(crab_score), np.array(crab_score_adjusted_optimist), np.array(crab_score_adjusted_pessimist),
          np.array(opponent_score))
 
 

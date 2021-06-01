@@ -4,8 +4,6 @@ from collections import defaultdict
 
 import numpy as np
 
-season = 19
-
 
 def is_connected_without(adjancency, edge):
     x, y = edge
@@ -78,7 +76,7 @@ def get_euler_tour(adjancency):
     return tour
 
 
-def main():
+def test_season(season):
     with open(f"season-{season}-matchups.json", "r") as f:
         matchups_by_day = json.load(f)
 
@@ -201,7 +199,12 @@ def main():
         for j in range(i, num_teams):
             assert abs(pair_count[i, j] - pair_count[j, i]) <= 1
 
-    print("Validated!")
+    print(f"Validated on season {season}!")
+
+
+def main():
+    for season in range(13, 20):
+        test_season(season)
 
 
 if __name__ == '__main__':

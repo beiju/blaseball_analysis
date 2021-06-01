@@ -4,7 +4,7 @@ from collections import defaultdict
 from blaseball_mike import models
 from tqdm import tqdm
 
-season = 19  # one indexed
+season = 13  # one indexed
 
 
 def main():

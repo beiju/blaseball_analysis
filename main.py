@@ -20,7 +20,7 @@ def download_games():
         game_url = f"https://api.sibr.dev/chronicler/v1/games/updates?game={game['gameId']}&count=1000"
         game_file_path = f"data-s10/{i}.json"
         urlretrieve(game_url, game_file_path)
-        print("Downloaded game", i)
+        print("Downloaded gameId", i)
 
 
 runners_scored_re = re.compile(r'^(.+) (?:scores!|advances on the sacrifice\.|steals fourth base!)', flags=re.MULTILINE)
@@ -59,7 +59,7 @@ def is_crab(update):
 
 
 class GameState(object):
-    # Events that don't change any of the game state that I track
+    # Events that don't change any of the gameId state that I track
     flavor_events = {
         "A desolate peanutty wind blows.",
         "Peanut fragments rustle on the infield.",
@@ -114,8 +114,8 @@ class GameState(object):
         self.runs_home = 0
         self.runs_away = 0
 
-        self.home_team = None  # Will be set once we get a game
-        self.away_team = None  # Will be set once we get a game
+        self.home_team = None  # Will be set once we get a gameId
+        self.away_team = None  # Will be set once we get a gameId
 
         self.borrowed_time = False
         self.reached_on_borrowed_time = []  # Intentionally a list, not a set, because of Kennedy Loser
@@ -150,8 +150,8 @@ class GameState(object):
             print("Half-inning end", update['lastUpdate'])
             self.reset_half_inning()
         elif update['phase'] == 7:
-            # Game event that ends the game. Don't process it because it breaks assertions
-            print("Half-inning end and game end", update['lastUpdate'])
+            # Game event that ends the gameId. Don't process it because it breaks assertions
+            print("Half-inning end and gameId end", update['lastUpdate'])
             assert self.runs_away == update['awayScore']
             assert self.runs_home == update['homeScore']
         else:
@@ -271,7 +271,7 @@ class GameState(object):
         elif any(event in update['lastUpdate'] for event in GameState.flavor_events) or re.match(r"^\d+ Birds$", update['lastUpdate']):
             print("Flavor event")
         else:
-            raise RuntimeError("Unknown game update")
+            raise RuntimeError("Unknown gameId update")
 
         self.baserunners_prev = update['baseRunners']
 
@@ -327,7 +327,7 @@ class GameState(object):
         if out_without_reaching_re.search(update['lastUpdate']) is None:
             runners_out = out_at_base_re.findall(update['lastUpdate'])
             if "hit into a double play!" in update['lastUpdate']:
-                # Find the runner who got out. The game doesn't tell us.
+                # Find the runner who got out. The gameId doesn't tell us.
                 runners_out.append(self.player_id_to_name[
                                        [player for player in self.baserunners_prev if
                                         player not in update['baseRunners']][0]])
@@ -513,7 +513,7 @@ class GameState(object):
         inning_ended = self.out(update, without_reset=True)
         assert inning_ended or runner_change == -1
 
-    # Not necessarily the opposite of is_clab_bad! If a game would have continued under
+    # Not necessarily the opposite of is_clab_bad! If a gameId would have continued under
     # the simulated circumstances, the simulation cannot continue and so stops it at a tie.
     # In that case, clab is neither good nor bad.
     def is_clab_good(self, adjust_runs=True, adjust_runs_optimist=True):
@@ -571,7 +571,7 @@ def simulate_season():
     opponent_strikes_swinging = 0
     for i in range(num_games):
         if i == 24:
-            # Chronicle broke for this game so the data does not exist. We scored 0 runs, though, so clab good is not
+            # Chronicle broke for this gameId so the data does not exist. We scored 0 runs, though, so clab good is not
             # likely under most circumstances
             games_lost_optimist += 1
 

@@ -302,3 +302,186 @@ CROSS JOIN LATERAL (
 WHERE game_events.tournament=-1
 LIMIT 100
 ```
+
+very accused query to find peanut reactions
+```postgresql
+SELECT badq.*, goodq.good  FROM (SELECT team, COUNT(team) AS bad
+FROM (SELECT (CASE WHEN team='Dalé' THEN 'Dale' ELSE team END) AS team 
+	  FROM (SELECT substring(original_text from '^(.*?) hitter') AS team 
+	  		FROM data.outcomes 
+	  		WHERE event_type='PEANUT_BAD') inn
+
+UNION ALL 
+	  SELECT * FROM (VALUES ('Dale'), ('Wild Wings')) AS t (team)
+UNION ALL 
+
+SELECT nickname AS team FROM (
+	SELECT game_event_id, substring(original_text from '^(.*?) swallowed') AS player_name
+	FROM data.outcomes 
+	WHERE event_type='PEANUT_BAD' 
+		AND original_text NOT LIKE '%hitter%'
+		AND original_text NOT LIKE '%pitcher%') q 
+LEFT JOIN data.game_events ON q.game_event_id=game_events.id
+INNER JOIN data.players ON players.player_name=q.player_name 
+	AND players.valid_from <= perceived_at
+	AND (players.valid_until >= perceived_at OR players.valid_until IS NULL)
+INNER JOIN data.team_roster ON players.player_id=team_roster.player_id
+	AND team_roster.tournament=-1
+	AND team_roster.valid_from <= perceived_at
+	AND (team_roster.valid_until >= perceived_at OR team_roster.valid_until IS NULL)
+LEFT JOIN data.teams ON teams.team_id=team_roster.team_id 
+	AND teams.valid_until IS NULL) qq
+GROUP BY team
+ORDER BY COUNT(team) DESC) badq
+
+FULL OUTER JOIN (SELECT * FROM (SELECT team, COUNT(team) AS good
+FROM (SELECT (CASE WHEN team='Dalé' THEN 'Dale' ELSE team END) AS team 
+	  FROM (SELECT substring(original_text from '^(.*?) hitter') AS team 
+	  		FROM data.outcomes 
+	  		WHERE event_type='PEANUT_GOOD') inn
+
+UNION ALL 
+	  SELECT * FROM (VALUES ('Dale'), ('Wild Wings')) AS t (team)
+UNION ALL 
+
+SELECT nickname AS team FROM (
+	SELECT game_event_id, substring(original_text from '^(.*?) swallowed') AS player_name
+	FROM data.outcomes 
+	WHERE event_type='PEANUT_GOOD' 
+		AND original_text NOT LIKE '%hitter%'
+		AND original_text NOT LIKE '%pitcher%') q 
+LEFT JOIN data.game_events ON q.game_event_id=game_events.id
+INNER JOIN data.players ON players.player_name=q.player_name 
+	AND players.valid_from <= perceived_at
+	AND (players.valid_until >= perceived_at OR players.valid_until IS NULL)
+INNER JOIN data.team_roster ON players.player_id=team_roster.player_id
+	AND team_roster.tournament=-1
+	AND team_roster.valid_from <= perceived_at
+	AND (team_roster.valid_until >= perceived_at OR team_roster.valid_until IS NULL)
+LEFT JOIN data.teams ON teams.team_id=team_roster.team_id 
+	AND teams.valid_until IS NULL) qq
+GROUP BY team
+ORDER BY COUNT(team) DESC) oq) goodq ON goodq.team=badq.team
+```
+
+strength of underhanded on pitchers
+```postgresql
+
+select * 
+from (select runs_groups.*, 
+		runs_by_hr/runs as proportion, 
+		player_name,
+		rank() over (order by runs_by_hr/runs desc) as rank
+	from (
+		select pitcher_id,
+			sum(runs_batted_in) AS runs,
+			sum((case when event_type='HOME_RUN' or event_type='HOME_RUN_5' then runs_batted_in else 0 end)) as runs_by_hr
+		from data.game_events
+		where season=19
+		group by pitcher_id) runs_groups
+	left join data.players on pitcher_id=player_id and players.valid_until is null
+	order by runs_by_hr/runs desc) ranked_pitchers
+where player_name in ('Dunlap Figueroa',
+'Adalberto Tosser',
+'Mindy Kugel',
+'Miguel James',
+'King Weatherman',
+'Winnie Hess',
+'Juice Collins',
+'Alexandria Rosales',
+'Baldwin Breadwinner',
+'Riley Firewall',
+'Snyder Briggs',
+'Nolanestophia Patterson',
+'Patchwork Southwick',
+'Ziwa Mueller', 'Wanda Schenn', 'Mindy Salad')
+```
+
+longest time with mod
+```postgresql
+SELECT * FROM (SELECT player_name, 
+			   AGE((case when mods.valid_until is null then now() else mods.valid_until end), mods.valid_from) as duration
+		FROM data.player_modifications mods
+		LEFT JOIN data.players ON players.player_id=mods.player_id
+		WHERE modification='ELSEWHERE'
+			AND players.valid_until IS NULL) q
+ORDER BY duration DESC
+LIMIT 30
+```
+
+big buckets moxie correlation
+```postgresql
+select 
+	COUNT(*) AS num_homers,
+	SUM((array_to_string(event_text, '; ') LIKE '%The ball lands in a Big Bucket%')::int) AS num_buckets, 
+	round(moxie, 1) AS moxie
+from data.game_events
+left join data.games on game_events.game_id=games.game_id
+inner join data.stadiums on stadiums.team_id=games.home_team
+	and stadiums.valid_from <= game_events.perceived_at
+	and (stadiums.valid_until > game_events.perceived_at OR stadiums.valid_until IS NULL)
+	and stadiums.team_id<>'8d87c468-699a-47a8-b40d-cfb73a5660ad' -- necessary thanks to crabs big bucket fraud
+inner join data.stadium_modifications on stadiums.stadium_id=stadium_modifications.stadium_id
+	and stadium_modifications.valid_from <= game_events.perceived_at
+	and (stadium_modifications.valid_until > game_events.perceived_at OR stadium_modifications.valid_until IS NULL)
+	and stadium_modifications.modification='big_bucket_mod'
+inner join data.players on game_events.batter_id=players.player_id
+	and players.valid_from <= game_events.perceived_at
+	and (players.valid_until > game_events.perceived_at OR players.valid_until IS NULL)
+where event_type='HOME_RUN' or event_type='HOME_RUN_5'
+group by round(moxie, 1)
+--limit 10
+
+```
+
+
+alley oops rate
+```postgresql
+select 
+	player_id,
+	count(*) as num_oops,
+	sum(slammed_it_down::int) as num_successful
+from (select coalesce(next_in_roster, first_in_roster) as ooper, slammed_it_down, perceived_at
+	from (select 
+		  	perceived_at,
+			(select player_id
+			 from data.team_roster team_roster_next
+			 where team_roster_next.team_id=team_roster.team_id
+				and position_type_id=0
+				and team_roster_next.valid_from <= game_events.perceived_at
+				and (team_roster_next.valid_until > game_events.perceived_at or team_roster_next.valid_until is null)
+				and team_roster_next.position_id > team_roster.position_id
+				order by position_id
+				limit 1) as next_in_roster,
+			(select player_id
+			 from data.team_roster team_roster_next
+			 where team_roster_next.team_id=team_roster.team_id
+				and position_type_id=0
+				and team_roster_next.valid_from <= game_events.perceived_at
+				and (team_roster_next.valid_until > game_events.perceived_at or team_roster_next.valid_until is null)
+				and team_roster_next.position_id=0) as first_in_roster,
+			array_to_string(event_text, '; ') LIKE '%went up for the alley oop%' AS went_for_it, 
+			array_to_string(event_text, '; ') LIKE '%they slammed it down for%' AS slammed_it_down
+		from data.game_events
+		left join data.games on game_events.game_id=games.game_id
+		inner join data.stadiums on stadiums.team_id=games.home_team
+			and stadiums.valid_from <= game_events.perceived_at
+			and (stadiums.valid_until > game_events.perceived_at OR stadiums.valid_until IS NULL)
+			and stadiums.team_id<>'8d87c468-699a-47a8-b40d-cfb73a5660ad' -- necessary thanks to crabs big bucket fraud
+		inner join data.stadium_modifications on stadiums.stadium_id=stadium_modifications.stadium_id
+			and stadium_modifications.valid_from <= game_events.perceived_at
+			and (stadium_modifications.valid_until > game_events.perceived_at OR stadium_modifications.valid_until IS NULL)
+			and stadium_modifications.modification='hoops_mod'
+		left join data.team_roster on game_events.batter_id=team_roster.player_id
+			and team_roster.tournament=-1
+			and team_roster.valid_from <= game_events.perceived_at
+			and (team_roster.valid_until > game_events.perceived_at OR team_roster.valid_until IS NULL)
+		where (event_type='HOME_RUN' or event_type='HOME_RUN_5')
+			and array_to_string(event_text, '; ') LIKE '%went up for the alley oop%') q
+	where went_for_it) qq
+left join data.players on ooper=players.player_id
+	and players.valid_from <= perceived_at
+	and (players.valid_until > perceived_at OR players.valid_until IS NULL)
+group by player_id
+order by count(*) - sum(slammed_it_down::int) desc
+```

@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    data = pd.read_csv("run_differential_all.csv")
+    data = pd.read_csv("run_differential_all_s13.csv")
 
     # Remove playoffs
     data = data[data['day'] < 99]
 
     # Whoops. Made my data backwards.
-    data['differential'] = -data['differential']
+    # data['differential'] = -data['differential']
 
     # This data only has away games. Add an inverted copy to get home games
     data_inv = data.copy()
@@ -47,7 +47,7 @@ def main():
     plt.tick_params(labelcolor='none', top=False, bottom=False, left=False, right=False)
     plt.xlabel("Frequency")
     plt.ylabel("Run Differential")
-    plt.title("Regular Season 14 Run Differentials")
+    # plt.title("Regular Season 13     Run Differentials")
 
     plt.tight_layout()
     plt.show()

@@ -2,11 +2,85 @@ import random
 from collections import defaultdict
 
 import numpy as np
+from itertools import chain, combinations
+
+from tqdm import tqdm
+
+
+def powerset(iterable):
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
 
 def get_tour(adjancency, start_node, total_edge_follows, phase_edge_follows):
     return get_path_until(adjancency, start_node, start_node,
                           total_edge_follows, phase_edge_follows)
+
+
+def obeys_induced_subgraph_condition(adjancency, a, c,
+                                     total_edge_follows, phase_edge_follows):
+    adjancency = adjancency.copy()
+    total_edge_follows = total_edge_follows.copy()
+    phase_edge_follows = phase_edge_follows.copy()
+
+    # Follow this edge
+    adjancency[a, c] -= 1
+    adjancency[c, a] -= 1
+
+    total_edge_follows[a, c] += 1
+    phase_edge_follows[a, c] += 1
+
+    masks = np.unpackbits(
+        np.arange(2 ** adjancency.shape[0], dtype=np.uint32)
+            .reshape((1, -1)).view(np.uint8),
+        count=adjancency.shape[0], axis=0).view(bool)
+
+    stride = 1000000
+    for i in tqdm(range(0, 2**adjancency.shape[0], stride)):
+        masks_2d = masks[:, None, i:i+stride] * ~masks[None, :, i:i+stride]
+
+        directed_out = (total_edge_follows[:, :, None] * masks_2d).sum(axis=(0, 1))
+        directed_in = (total_edge_follows[:, :, None] * np.transpose(masks_2d, (1, 0, 2))).sum(axis=(0, 1))
+        undirected = (adjancency[:, :, None] * masks_2d).sum(axis=(0, 1))
+
+        total_edges = directed_in + directed_out + undirected
+
+        directed_diff = directed_out - directed_in
+
+        cond_1, cond_2 = directed_diff, total_edges % 2 == 0
+
+        case_1 = cond_1 & cond_2
+        # max(0, directed_diff - undirected) == 0
+        # directed_diff - undirected > 0
+        # directed_diff > undirected
+        if not np.all(directed_diff[case_1] > undirected[case_1]):
+            return False
+
+        case_2 = cond_1 & ~cond_2
+        # max(1, directed_diff - undirected) == 0
+        # directed_diff - undirected == 0
+        # directed_diff == undirected
+        if not np.all(directed_diff[case_2] == undirected[case_2]):
+            return False
+
+        case_3 = ~cond_1 & cond_2
+        # min(0, directed_diff + undirected) == 0
+        # directed_diff + undirected >= 0
+        # directed_diff >= -undirected
+        if not np.all(directed_diff[case_3] >= -undirected[case_3]):
+            return False
+
+        case_4 = ~cond_1 & ~cond_2
+        # min(-1, directed_diff + undirected) == 0
+        # directed_diff + undirected == 0
+        # directed_diff == -undirected
+        if not np.all(directed_diff[case_4] == -undirected[case_4]):
+            return False
+
+    print("Deficiency check passed")
+
+    return True
 
 
 def get_path_until(adjancency, start_node, end_node, total_edge_follows,
@@ -16,7 +90,15 @@ def get_path_until(adjancency, start_node, end_node, total_edge_follows,
         return []
 
     # Get a list of candidates for which node to jump to next
-    candidates1 = adjancency[start_node].nonzero()[0]
+    candidates0 = adjancency[start_node].nonzero()[0]
+
+    assert candidates0.size > 0
+
+    candidates1 = candidates0[
+        [i for i, c in enumerate(candidates0)
+         if obeys_induced_subgraph_condition(
+            adjancency, start_node, c, total_edge_follows, phase_edge_follows)]
+    ]
 
     assert candidates1.size > 0
 
@@ -26,11 +108,12 @@ def get_path_until(adjancency, start_node, end_node, total_edge_follows,
     # goes to the beginning. If more are pointed this direction than the other
     # direction, then choosing that candidate takes us further from our goal so
     # it goes to the end. Then the frontmost candidate is selected.
-    total_net_edge_follows = (total_edge_follows[start_node, candidates1] - 
+    total_net_edge_follows = (total_edge_follows[start_node, candidates1] -
                               total_edge_follows[candidates1, start_node])
-    phase_net_edge_follows = (phase_edge_follows[start_node, candidates1] - 
+    phase_net_edge_follows = (phase_edge_follows[start_node, candidates1] -
                               phase_edge_follows[candidates1, start_node])
-    net_edge_follows = np.minimum(total_net_edge_follows, phase_net_edge_follows)
+    net_edge_follows = np.minimum(total_net_edge_follows,
+                                  phase_net_edge_follows)
     candidates2 = candidates1[net_edge_follows == net_edge_follows.min()]
 
     remaining_nodes = adjancency[candidates2].sum(axis=1)

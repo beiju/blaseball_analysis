@@ -5,7 +5,7 @@ from collections import defaultdict
 from itertools import count
 from multiprocessing import Process, Value
 
-from scheduler.sheduler2 import test_matchups
+from scheduler.sheduler import test_matchups
 
 
 def phase_for_day(day):

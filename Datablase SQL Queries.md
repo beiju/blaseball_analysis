@@ -485,3 +485,203 @@ left join data.players on ooper=players.player_id
 group by player_id
 order by count(*) - sum(slammed_it_down::int) desc
 ```
+
+tunnels rate per team
+```postgresql
+select sum(1.0 / num_eligible) as num_events, 
+	sum((event_text like concat('%', player_name, ' entered the Tunnels%'))::int) as num_tunnels, 
+	team_id,
+	nickname
+from (select unnest(event_text) as event_text, player_id, perceived_at, team_id, nickname, num_eligible
+	from (select game_events.event_text, 
+		  team_roster.player_id, 
+		  game_events.perceived_at, 
+		  teams.team_id, 
+		  teams.nickname,
+		  count(*) over (partition by game_events.id) as num_eligible
+		from data.game_events
+		left join data.games on game_events.game_id=games.game_id
+		left join data.team_roster on team_roster.team_id=games.home_team
+			and team_roster.tournament=-1
+			and team_roster.position_type_id=1
+			and team_roster.player_id <> games.winning_pitcher_id
+			and team_roster.player_id <> games.losing_pitcher_id
+			and team_roster.valid_from <= game_events.perceived_at
+			and (team_roster.valid_until > game_events.perceived_at or team_roster.valid_until is null)
+		inner join data.teams on team_roster.team_id=teams.team_id
+			and teams.valid_from <= game_events.perceived_at
+			and (teams.valid_until > game_events.perceived_at or teams.valid_until is null)
+		inner join taxa.event_types on game_events.event_type=event_types.event_type
+		where ((game_events.season=19 and game_events.day > 71) or game_events.season > 19)
+			and plate_appearance>0
+		 	and game_events.away_score >= 1) qq) q
+left join data.players on q.player_id=players.player_id
+	and players.valid_from <= q.perceived_at
+	and (players.valid_until > q.perceived_at or players.valid_until is null)
+group by team_id, nickname
+limit 100
+```
+
+tunnels steals
+```postgresql
+select --sum(1.0 / num_eligible) as num_events, 
+	--sum((event_text like concat('%', thief.player_name, ' entered the Tunnels%'))::int) as num_tunnels, 
+	victim.watchfulness,
+	victim.player_name,
+	thief.player_name,
+	event_text
+from (select unnest(event_text) as event_text, player_id, perceived_at, num_eligible, defending_pitcher
+	from (select game_events.event_text, 
+		  team_roster.player_id, 
+		  game_events.perceived_at, 
+		  count(*) over (partition by game_events.id) as num_eligible,
+		  (case when games.home_score > games.away_score then losing_pitcher_id else winning_pitcher_id end) as defending_pitcher
+		from data.game_events
+		left join data.games on game_events.game_id=games.game_id
+		left join data.team_roster on team_roster.team_id=games.home_team
+			and team_roster.tournament=-1
+			and team_roster.position_type_id=1
+			and team_roster.player_id <> games.winning_pitcher_id
+			and team_roster.player_id <> games.losing_pitcher_id
+			and team_roster.valid_from <= game_events.perceived_at
+			and (team_roster.valid_until > game_events.perceived_at or team_roster.valid_until is null)
+		inner join taxa.event_types on game_events.event_type=event_types.event_type
+		where ((game_events.season=19 and game_events.day > 71) or game_events.season > 19)
+			and plate_appearance>0) qq) q
+left join data.players thief on q.player_id=thief.player_id
+	and thief.valid_from <= q.perceived_at
+	and (thief.valid_until > q.perceived_at or thief.valid_until is null)
+left join data.players victim on q.defending_pitcher=victim.player_id
+	and victim.valid_from <= q.perceived_at
+	and (victim.valid_until > q.perceived_at or victim.valid_until is null)
+where event_text like concat('%', thief.player_name, ' entered the Tunnels%')
+order by victim.watchfulness
+limit 30
+```
+
+voicemails
+```postgresql
+select 
+	nickname,
+	sum((q.highest_score=0 and q.lowest_score=0)::int) as score_always_0,
+	sum((q.highest_score=0)::int) as score_never_above_0,
+	sum((games.home_score=0)::int) as score_ended_at_0
+from (select game_id, max(home_score) as highest_score, min(home_score) as lowest_score from data.game_events
+	where game_events.season=19
+	group by game_id) q
+left join data.games on games.game_id=q.game_id
+left join data.teams on games.home_team=teams.team_id and teams.valid_until is null
+group by team_id, nickname
+order by sum((q.highest_score=0 and q.lowest_score=0)::int) desc
+```
+
+incin rate
+```postgresql
+select sum((modification is null)::int) as natural_events,
+	   sum((modification is not null)::int) as unstable_events,
+	   sum((incin and modification is null)::int) as natural_incins,
+	   sum((incin and modification is not null)::int) as unstable_incins,
+	   season_,
+	   position_type_id
+from (select EXISTS (
+		SELECT -- can be empty 
+		FROM unnest(event_text) elem
+		WHERE elem LIKE '%incinerated%'
+			and (elem like concat('%hitter ', player_name, '!%')
+				 or elem like concat('%pitcher ', player_name, '!%')
+				 or elem like concat('%incinerated ', player_name, '!%'))
+	  ) as incin,
+	  games.season as season_,
+		*
+	from data.game_events
+	left join data.games on game_events.game_id=games.game_id
+	left join data.team_roster on (games.home_team=team_roster.team_id or games.away_team=team_roster.team_id)
+		and (team_roster.position_type_id=0 or team_roster.position_type_id=1)
+		and team_roster.valid_from <= game_events.perceived_at
+		and (team_roster.valid_until > game_events.perceived_at or team_roster.valid_until is null)
+	left join data.player_modifications on player_modifications.player_id=team_roster.player_id
+		and modification='MARKED' /* unstable */
+		and player_modifications.valid_from <= game_events.perceived_at
+		and (player_modifications.valid_until > game_events.perceived_at or player_modifications.valid_until is null)
+	left join data.players on players.player_id=team_roster.player_id
+		and players.valid_from <= game_events.perceived_at
+		and (players.valid_until > game_events.perceived_at or players.valid_until is null)
+	where games.weather=7 /* solar eclipse */
+		  ) q
+group by season_, position_type_id
+order by season_, position_type_id
+```
+
+finnesse (of players with at least 5 games, per season during all pre-underhanded expansion era seasons)
+```postgresql
+select round(baserunners_stranded / runs_allowed, 3) as finnesse,
+	round(runs_allowed, 1) as runs_allowed,
+	baserunners_stranded, 
+	games,
+	player_name,
+	q.season + 1 as season_one_indexed
+from (select count(*) as baserunners_stranded, pitcher_id, season
+	from data.game_events 
+	inner join data.game_event_base_runners on game_events.id=game_event_base_runners.game_event_id
+	where (outs_before_play + outs_on_play = 3)
+	group by pitcher_id, season) q
+left join (
+	select sum(games) as games, sum(runs_allowed) as runs_allowed, player_id, player_name, season
+	from data.pitching_stats_player_season 
+	group by player_id, player_name, season) stats 
+	on q.pitcher_id=stats.player_id and q.season=stats.season
+where runs_allowed > 0 and games > 5 and q.season < 19 and q.season > 10
+order by baserunners_stranded / runs_allowed desc
+```
+
+winnrate (win rate against winnie hess, expansion era only)
+```postgresql
+select winnie_wins_grouped.team, full_name, wins, losses, round(wins/(wins+losses+0.0), 3) as winnrate
+from (select team, count(*) as wins
+	from (select 
+			(case when home_score > away_score then home_team else away_team end) as team
+		from data.games 
+		where losing_pitcher_id='f2a27a7e-bf04-4d31-86f5-16bfa3addbe7'
+			and season > 11) winnie_wins
+	group by team) winnie_wins_grouped
+full outer join (select team, count(*) as losses
+	from (select 
+			(case when home_score < away_score then home_team else away_team end) as team
+		from data.games 
+		where winning_pitcher_id='f2a27a7e-bf04-4d31-86f5-16bfa3addbe7'
+			and season > 11) winnie_losses
+	group by team) winnie_losses_grouped on winnie_wins_grouped.team=winnie_losses_grouped.team
+left join data.teams on winnie_wins_grouped.team=teams.team_id and teams.valid_until is null
+order by wins/(wins+losses+0.0) desc
+```
+
+season 23 pitcher performance stats by attribute
+```postgresql
+select stats.*, 
+	players.player_name,
+	(walks + hits) / (outs / 3.0) as whip,
+	hits / (outs / 27.0) as h9,
+	home_runs / (outs / 27.0) as hr9,
+	walks / (outs / 27.0) as bb9,
+	strikeouts / (outs / 27.0) as so9,
+	(case when walks=0 then 0 else strikeouts / (walks * 1.0) end) as so_bb
+from (select pitcher_id, coldness, overpowerment, ruthlessness, shakespearianism, suppression, unthwackability,
+		count(*) as game_events,
+		count(*) filter (where event_types.out=1) as outs,
+		count(*) filter (where game_events.event_type='STRIKEOUT') as strikeouts,
+		count(*) filter (where game_events.event_type='WALK') as walks,
+		count(*) filter (where event_types.hit=1) as hits,
+		count(*) filter (where game_events.event_type='HOME_RUN' or game_events.event_type='HOME_RUN_5') as home_runs
+	from data.game_events 
+	left join taxa.event_types on game_events.event_type=event_types.event_type
+	left join data.players on game_events.pitcher_id=players.player_id
+		and players.valid_from <= game_events.perceived_at 
+		and (players.valid_until > game_events.perceived_at or players.valid_until is NULL)
+	where season=22 and pitcher_id is not null
+	group by pitcher_id, coldness, overpowerment, ruthlessness, shakespearianism, suppression, unthwackability
+) stats
+-- Getting players outside the stats subquery so stats aren't grouped by name changes
+left join data.players on stats.pitcher_id=players.player_id and players.valid_until is null
+where outs > 0
+
+```

@@ -1,21 +1,27 @@
 from math import floor, ceil
 
-import requests
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 from rng_analysis.util import load_players_oldest_records
 from rng_matcher import rng_walker_for_birth, RngMatcherError
 
 
 def main():
-    first_name_pool, first_name_pool_size = prehistory_pool_size('first_names')
-    last_name_pool, last_name_pool_size = prehistory_pool_size('last_names')
+    first_name_pool_size, first_name_pool = s1_pool_size('first_names')
+    last_name_pool_size, last_name_pool = s1_pool_size('last_names')
 
     players_oldest = load_players_oldest_records(exclude_initial=True)
 
-    max_player_name_len = max(len(p['data']['name']) for p in players_oldest)
+    prev_first = first_name_pool_size
+    prev_last = last_name_pool_size
+    first_sizes = [first_name_pool_size]
+    last_sizes = [last_name_pool_size]
     for player in tqdm(players_oldest):
         name = player['data']['name']
+
+        first_name_map = {name: pos for pos, name in first_name_pool.items()}
+        last_name_map = {name: pos for pos, name in last_name_pool.items()}
 
         try:
             walker = rng_walker_for_birth(player['data'])
@@ -23,22 +29,62 @@ def main():
             pass
             # print(player['data']['name'], "could not be derived:", e)
         else:
+            if not walker.synced:
+                continue
+
             assert player['data']['thwackability'] == walker[0]
-            l
+            first_name_val = walker[2]
+            last_name_val = walker[1]
+
+            segments = name.split()
+            if len(segments) != 2:
+                # Uhhhhhhhhhhhhhh
+                continue
+
+            actual_first, actual_last = segments
+            try:
+                first_pos = first_name_map[actual_first]
+            except KeyError:
+                first_sizes.append(float('nan'))
+            else:
+                first_size = first_pos / first_name_val
+                first_sizes.append(first_size)
+
+                if first_size < first_name_pool_size:
+                    breakpoint()
+                prev_first = first_size
+
+            if actual_last not in ['Melon']:
+                try:
+                    last_pos = last_name_map[actual_last]
+                except KeyError:
+                    last_sizes.append(float('nan'))
+                else:
+                    last_size = last_pos / last_name_val
+                    last_sizes.append(last_size)
+
+                    if last_size < last_name_pool_size:
+                        breakpoint()
+                    prev_last = last_size
+
+            pass
+
+    fig, (first_ax, last_ax) = plt.subplots(2)
+    first_ax.scatter(range(len(first_sizes)), first_sizes)
+    first_ax.set_title("First name pool size")
+    last_ax.scatter(range(len(last_sizes)), last_sizes)
+    last_ax.set_title("Last name pool size")
+
+    plt.show()
 
 
-def player_oldest_record(player):
-    return requests.get(
-        f"https://api.sibr.dev/chronicler/v2/versions?type=player&id={player['data']['id']}&sort=asc&count=1").json()[
-        'items'][0]
-
-
-def prehistory_pool_size(filename):
+def s1_pool_size(filename) -> (int, dict):
     pairs = []
     with open(f'/home/will/Downloads/{filename}.txt', 'r', encoding='utf-8',
               errors='ignore') as f:
         for line in f.readlines():
             (value, name) = line.split(maxsplit=1)
+            name = name.replace('\n', '')
             pairs.append((float(value), name))
 
     pairs.sort()

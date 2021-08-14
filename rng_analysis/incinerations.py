@@ -50,6 +50,7 @@ replacements = {'Sixpack Dogwalker', 'Greer Gwiffin', 'Case Sports',
 def main():
     players_oldest = load_players_oldest_records(exclude_initial=True)
 
+    total_synced = 0
     max_player_name_len = max(len(p['data']['name']) for p in players_oldest)
     for player in tqdm(players_oldest):
         name = player['data']['name']
@@ -58,10 +59,10 @@ def main():
             continue
 
         try:
-            walker = rng_walker_for_birth(player['data'])
+            walker = rng_walker_for_birth(player)
         except RngMatcherError as e:
             pass
-            # print(player['data']['name'], "could not be derived:", e)
+            tqdm.write(f"{player['data']['name']} could not be derived: {e}")
         else:
             assert player['data']['thwackability'] == walker[0]
             lowest_roll, lowest_roll_i = min((walker[i], i) for i in range(200))
@@ -69,6 +70,8 @@ def main():
             unsynced = ""
             if not walker.synced:
                 unsynced = " (not synced)"
+            else:
+                total_synced += 1
             at_3 = walker[3]
             at_4 = walker[4]
             at_5 = walker[5]
@@ -78,6 +81,7 @@ def main():
             tqdm.write(
                 f"{spaces}{name} lowest of 3, 4, 5, 98: {lowest_of_knowns:.5f} at {lowest_of_knowns_i}, lowest overall: {lowest_roll:.5f} at {lowest_roll_i}{unsynced}")
 
+    print(total_synced)
 
 if __name__ == '__main__':
     main()

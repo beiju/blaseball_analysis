@@ -13,13 +13,13 @@ The main use of an RngWalker is to subscript it to get an RNG value. See
 RngWalker.__getitem__ for more.
 """
 
-
 import random
 import struct
 from copy import copy
 from itertools import islice
 from typing import List
 
+import numpy as np
 import z3
 
 MASK = 0xFFFFFFFFFFFFFFFF
@@ -52,6 +52,44 @@ attrs_ordered = [
     "pressurization",
     # "cinnamon"  # Not present in early players
 ]
+
+"""
+Order:
+first name
+last name
+thwackability
+moxie
+divinity
+musclitude
+patheticism
+buoyancy
+baseThirst
+laserlikeness
+groundFriction
+continuation
+indulgence
+martyrdom
+tragicness
+shakespearianism
+suppression
+unthwackability
+coldness
+overpowerment
+ruthlessness
+omniscience
+tenaciousness
+watchfulness
+anticapitalism
+chasiness
+pressurization
+cinnamon, if player has 'cinnamon' field
+soul = floor(rand()*8+2)
+allergy = rand() < 0.5, if player has 'peanutAllergy' field
+fate = floor(rand()*100), if player has 'fate' field
+ritual (value unknown), if s12 or later
+blood = floor(rand()*13), if s12 or later
+coffee = floor(rand()*13), if s12 or later
+"""
 
 
 class RngMatcherError(RuntimeError):
@@ -152,33 +190,20 @@ def to_double(out):
     return struct.unpack('d', struct.pack('<Q', double_bits))[0] - 1
 
 
-def find_fk_stat(player, value):
-    for k, v in player.items():
-        if v == value:
-            return k
-
-
-def find_fk_stat_deep(players, value):
-    for player in players:
-        stat = find_fk_stat(player, value)
-        if stat:
-            return "{}/{}".format(player["name"], stat)
-
-
 def generate_numbers(s0: int, s1: int):
     while True:
         block = []
         for _ in range(64):
-            last_s0, last_s1 = s0, s1
             s0, s1 = xs128p(s0, s1)
-            block.append((last_s0, last_s1, to_double(s0)))
+            block.append(to_double(s0))
         block = block[::-1]
         yield from block
 
 
-def print_val(players, s0, s1, val):
-    print("{}\ts0={}\ts1={}\tstat={}".format(val, s0, s1,
-                                             find_fk_stat_deep(players, val)))
+def step_forwards(s0, s1, amount):
+    for _ in range(amount):
+        s0, s1 = xs128p(s0, s1)
+    return s0, s1
 
 
 def step_backwards(s0, s1, amount):
@@ -187,11 +212,17 @@ def step_backwards(s0, s1, amount):
     return s0, s1
 
 
+def step_directionally(s0, s1, amount):
+    if amount < 0:
+        return step_backwards(s0, s1, -amount)
+    return step_forwards(s0, s1, amount)
+
+
 def rng_state_for_values(values: List[float]) -> (int, int):
     values = copy(values)
     while len(values) >= 2:
         try:
-            return find_state(values)
+            return
         except RngMatcherError:
             values.pop()
 
@@ -225,12 +256,77 @@ class RngWalker:
         for _ in zip(generator, range(target)):
             pass
 
-        _, _, value = next(generator)
-        return value
+        return next(generator)
 
 
-def rng_walker_for_values(values: List[float]):
-    initial_s0, initial_s1 = rng_state_for_values(values[:5])
+def validate_rng_for_player(generator, player_full):
+    player = player_full['data']
+
+    # First, all attributes (except thwack, which is 'used up' by the block
+    # boundary sync)
+    for attr, generated_value in zip(attrs_ordered[1:], generator):
+        if player[attr] != generated_value and not (
+                # For some reason, dan bong's tragicness is exactly 0
+                attr == 'tragicness' and player[attr] == 0):
+            return False
+
+    # If the player has cinnamon, it was generated after the other attrs
+    if 'cinnamon' in player:
+        if player['cinnamon'] != next(generator):
+            return False
+
+    if player['soul'] != int(next(generator) * 8 + 2):
+        return False
+
+    if 'peanutAllergy' in player:
+        if player['peanutAllergy'] != (next(generator) < 0.5):
+            return False
+
+    if 'fate' in player:
+        if player['fate'] != int(next(generator) * 100):
+            return False
+
+    # Players from before the first grand siesta have blood and coffee fields,
+    # but they're always 0 at generation. After the siesta blood and coffee
+    # are generated randomly with player generation.
+    if player_full['validFrom'] > '2021':  # Yeah, this comparison works
+        # Don't yet have a ritual database, but need to consume the value
+        next(generator)
+
+        if player['blood'] != int(next(generator) * 13):
+            return False
+
+        if player['coffee'] != int(next(generator) * 13):
+            return False
+
+    return True
+
+
+def grouper(n, iterable):
+    args = [iter(iterable)] * n
+    return zip(*args)
+
+
+def rng_walker_for_birth(player_full):
+    player = player_full['data']
+    values = [player[attr] for attr in attrs_ordered]
+
+    initial_s0, initial_s1 = None, None
+    initial_offset = None
+    for i in range(len(values) - 5):
+        try:
+            initial_s0, initial_s1 = find_state(values[i:i+5])
+            initial_offset = i
+            break
+        except RngMatcherError:
+            pass
+
+    if initial_s0 is None or initial_s1 is None:
+        raise RngMatcherNoSolution("Solver found no unique solutions")
+
+    initial_s0, initial_s1 = step_backwards(initial_s0, initial_s1,
+                                            128 - initial_offset)
+    advance_generator_by = 64 - initial_offset
 
     # Find all offsets that work
     valid_offsets = []
@@ -239,22 +335,19 @@ def rng_walker_for_values(values: List[float]):
 
         generator = generate_numbers(s0, s1)
         sync_iterations = None
-        for i, (_, _, generated) in enumerate(islice(generator, 128)):
+        for i, generated in enumerate(islice(generator,
+                                             advance_generator_by,
+                                             advance_generator_by + 128)):
             if generated == values[0]:
                 # Synced!
                 sync_iterations = i
                 break
 
         if sync_iterations is None:
-            raise RngMatcherNoSolution("Failed to sync RNG")
+            continue
 
-        for i, (expected, (_, _, actual)) in enumerate(zip(values[1:], generator)):
-            if expected != actual:
-                # print("Offset", offset, "breaks at item", i, expected, '!=', actual)
-                break
-        else:
-            # print("Offset", offset, "works")
-            valid_offsets.append((offset, sync_iterations))
+        if validate_rng_for_player(generator, player_full):
+            valid_offsets.append((offset, advance_generator_by + sync_iterations))
 
     if len(valid_offsets) == 0:
         raise RngMatcherNoSolution("Couldn't find any valid offsets")
@@ -262,8 +355,3 @@ def rng_walker_for_values(values: List[float]):
     offset, sync_iterations = valid_offsets[0]
     return RngWalker(step_backwards(initial_s0, initial_s1, offset),
                      sync_iterations - 1, len(valid_offsets) == 1)
-
-
-def rng_walker_for_birth(player):
-    values = [player[attr] for attr in attrs_ordered]
-    return rng_walker_for_values(values)

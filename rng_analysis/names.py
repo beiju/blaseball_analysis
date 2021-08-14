@@ -24,10 +24,10 @@ def main():
         last_name_map = {name: pos for pos, name in last_name_pool.items()}
 
         try:
-            walker = rng_walker_for_birth(player['data'])
+            walker = rng_walker_for_birth(player)
         except RngMatcherError as e:
             pass
-            # print(player['data']['name'], "could not be derived:", e)
+            print(player['data']['name'], "could not be derived:", e)
         else:
             if not walker.synced:
                 continue
@@ -50,8 +50,8 @@ def main():
                 first_size = first_pos / first_name_val
                 first_sizes.append(first_size)
 
-                if first_size < first_name_pool_size:
-                    breakpoint()
+                # if first_size < first_name_pool_size:
+                #     breakpoint()
                 prev_first = first_size
 
             if actual_last not in ['Melon']:
@@ -63,8 +63,8 @@ def main():
                     last_size = last_pos / last_name_val
                     last_sizes.append(last_size)
 
-                    if last_size < last_name_pool_size:
-                        breakpoint()
+                    # if last_size < last_name_pool_size:
+                    #     breakpoint()
                     prev_last = last_size
 
             pass

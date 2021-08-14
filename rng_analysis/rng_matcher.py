@@ -315,7 +315,7 @@ def rng_walker_for_birth(player_full):
     initial_offset = None
     for i in range(len(values) - 5):
         try:
-            initial_s0, initial_s1 = find_state(values[i:i+5])
+            initial_s0, initial_s1 = find_state(values[i:i + 5])
             initial_offset = i
             break
         except RngMatcherError:
@@ -347,11 +347,12 @@ def rng_walker_for_birth(player_full):
             continue
 
         if validate_rng_for_player(generator, player_full):
-            valid_offsets.append((offset, advance_generator_by + sync_iterations))
+            valid_offsets.append(
+                (offset, advance_generator_by + sync_iterations))
 
     if len(valid_offsets) == 0:
         raise RngMatcherNoSolution("Couldn't find any valid offsets")
 
-    offset, sync_iterations = valid_offsets[0]
-    return RngWalker(step_backwards(initial_s0, initial_s1, offset),
-                     sync_iterations - 1, len(valid_offsets) == 1)
+    for offset, sync_iterations in valid_offsets:
+        yield RngWalker(step_backwards(initial_s0, initial_s1, offset),
+                        sync_iterations - 1, len(valid_offsets) == 1)

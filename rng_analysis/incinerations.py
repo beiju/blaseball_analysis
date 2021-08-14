@@ -59,27 +59,47 @@ def main():
             continue
 
         try:
-            walker = rng_walker_for_birth(player)
+            walkers = rng_walker_for_birth(player)
         except RngMatcherError as e:
             pass
             tqdm.write(f"{player['data']['name']} could not be derived: {e}")
         else:
-            assert player['data']['thwackability'] == walker[0]
-            lowest_roll, lowest_roll_i = min((walker[i], i) for i in range(200))
+            possibilities = set()
             spaces = " " * (max_player_name_len - len(name))
-            unsynced = ""
-            if not walker.synced:
-                unsynced = " (not synced)"
-            else:
-                total_synced += 1
-            at_3 = walker[3]
-            at_4 = walker[4]
-            at_5 = walker[5]
-            at_98 = walker[98]
-            lowest_of_knowns, lowest_of_knowns_i = min(
-                [(at_3, 3), (at_4, 4), (at_5, 5), (at_98, 98)])
-            tqdm.write(
-                f"{spaces}{name} lowest of 3, 4, 5, 98: {lowest_of_knowns:.5f} at {lowest_of_knowns_i}, lowest overall: {lowest_roll:.5f} at {lowest_roll_i}{unsynced}")
+            lowest_lowest_of_knowns = None
+            lowest_lowest_of_knowns_i = None
+            lowest_lowest_roll = None
+            lowest_lowest_roll_i = None
+
+            synced = ""
+            for walker in walkers:
+                assert player['data']['thwackability'] == walker[0]
+                lowest_roll, lowest_roll_i = min((walker[i], i) for i in range(200))
+                if not walker.synced:
+                    synced = " (inferred)"
+                else:
+                    total_synced += 1
+                at_3 = walker[3]
+                at_4 = walker[4]
+                at_5 = walker[5]
+                at_98 = walker[98]
+                at_99 = walker[99]
+
+                lowest_of_knowns, lowest_of_knowns_i = min(
+                    [(at_3, 3), (at_4, 4), (at_5, 5), (at_98, 98), (at_99, 99)])
+
+                if lowest_lowest_of_knowns is None or \
+                        lowest_of_knowns < lowest_lowest_of_knowns:
+                    lowest_lowest_of_knowns = lowest_of_knowns
+                    lowest_lowest_of_knowns_i = lowest_of_knowns_i
+                    lowest_lowest_roll = lowest_roll
+                    lowest_lowest_roll_i = lowest_roll_i
+
+            tqdm.write(f"{spaces}{name} lowest of 3, 4, 5, 98, 99: "
+                       f"{lowest_lowest_of_knowns:.5f} at "
+                       f"{lowest_lowest_of_knowns_i:>2}, lowest within 200: "
+                       f"{lowest_lowest_roll:.5f} at "
+                       f"{lowest_lowest_roll_i:>2}{synced}")
 
     print(total_synced)
 

@@ -2,27 +2,34 @@
 Using this file:
 
 Call the rng_walker_for_birth function with the player data object (in the
-format returned by chron) of a newly birthed player. It returns an RngWalker
-object if successful or throws an RngMatcherError if not. An RngWalker will
-be returned even if the RNG position could not be synced (ask sibr what this
-means). Values derived from an unsynced walker are untrustworthy. You can use
-the `synced` property of an RngWalker to determine whether the values are
-trustworthy.
+format returned by chron) of a newly birthed player. It returns an iterator of
+RngWalker objects if successful or throws an RngMatcherError if not. Every
+RngWalker in this iterator represents a possible state that could've generated
+the player you gave. If there's only one, then the values it gives can be
+trusted, otherwise we don't know which is the true state. In addition to
+checking the iterator size you can use the `synced` property of any RngWalker
+to determine whether the values are trustworthy.
 
-The main use of an RngWalker is to subscript it to get an RNG value. See
-RngWalker.__getitem__ for more.
+The main (only) use of an RngWalker is to subscript it to get an RNG value. See
+RngWalker.__getitem__ for more. RngWalkers returned from rng_walker_for_birth
+are "anchored" on the player's thwackability and positive values go forward in
+time. So walker[0] will give you the thwack value, walker[-1] the last name
+value, walker[-2] the first name value, walker[1] the moxie, and so on.
 """
 
 import random
 import struct
 from copy import copy
 from itertools import islice
+from math import floor
 from typing import List
 
 import numpy as np
 import z3
 
 MASK = 0xFFFFFFFFFFFFFFFF
+RNG_MATCHING_WINDOW = 5
+BLOCK_SIZE = 64
 
 attrs_ordered = [
     "thwackability",
@@ -102,6 +109,45 @@ class RngMatcherNoSolution(RngMatcherError):
 
 class RngMatcherMultipleSolutions(RngMatcherError):
     pass
+
+
+class RngWalker:
+    def __init__(self, state, offset, synced):
+        self.block0_s0, self.block1_s1 = state
+        self.block_to_reference_offset = offset
+        self.synced = synced
+
+        self.blocks = {}
+
+    def __getitem__(self, i):
+        """
+        Return the RNG value at an offset of i from wherever this RngWalker is
+        anchored (usually the player's thwackability). Positive i moves forward
+        in time.
+
+        This caches every value it sees, so it's not suitable for iterating huge
+        amounts of the RNG. If you want to do that you'll need to make a new
+        function that is suitable.
+        """
+
+        i_relative_to_block = i + self.block_to_reference_offset
+
+        block_num = floor(i_relative_to_block / BLOCK_SIZE)
+
+        if block_num in self.blocks:
+            block = self.blocks[block_num]
+        else:
+            # This could go faster if you found the closest block to start
+            # from, but the current speed is fast enough for me.
+            block_s0, block_s1 = step_directionally(self.block0_s0,
+                                                    self.block1_s1,
+                                                    block_num * BLOCK_SIZE)
+
+            block = generate_block(block_s0, block_s1)
+            self.blocks[block_num] = block
+
+        i_within_block = i_relative_to_block - block_num * BLOCK_SIZE
+        return block[i_within_block]
 
 
 # Symbolic execution of xs128p
@@ -193,11 +239,20 @@ def to_double(out):
 def generate_numbers(s0: int, s1: int):
     while True:
         block = []
-        for _ in range(64):
+        for _ in range(BLOCK_SIZE):
             s0, s1 = xs128p(s0, s1)
             block.append(to_double(s0))
         block = block[::-1]
         yield from block
+
+
+def generate_block(s0, s1):
+    block = []
+    for _ in range(BLOCK_SIZE):
+        s0, s1 = xs128p(s0, s1)
+        block.append(to_double(s0))
+    block = block[::-1]
+    return block
 
 
 def step_forwards(s0, s1, amount):
@@ -227,36 +282,6 @@ def rng_state_for_values(values: List[float]) -> (int, int):
             values.pop()
 
     raise RngMatcherNoSolution("Solver found no unique solutions")
-
-
-class RngWalker:
-    def __init__(self, state, sync_iterations, synced):
-        self.start_s0, self.start_s1 = state
-        self.sync_iterations = sync_iterations
-        self.synced = synced
-
-    def __getitem__(self, i):
-        """
-        Return the RNG value at an offset of i from the player's thwackability.
-        Note that positive i moves backwards in time (so i=1 should return the
-        last name value, i=2 the first name value, etc). This is a load-bearing
-        bug.
-
-        This function is really inefficient. Hilariously inefficient. You
-        probably want to save the values you get in variables rather than
-        calling it twice. Or just write the function better.
-        """
-        target = self.sync_iterations - i
-        s0, s1 = self.start_s0, self.start_s1
-        while target < 0:
-            s0, s1 = step_backwards(s0, s1, 64)
-            target += 64
-
-        generator = generate_numbers(s0, s1)
-        for _ in zip(generator, range(target)):
-            pass
-
-        return next(generator)
 
 
 def validate_rng_for_player(generator, player_full):
@@ -313,9 +338,10 @@ def rng_walker_for_birth(player_full):
 
     initial_s0, initial_s1 = None, None
     initial_offset = None
-    for i in range(len(values) - 5):
+    for i in range(len(values) - RNG_MATCHING_WINDOW):
         try:
-            initial_s0, initial_s1 = find_state(values[i:i + 5])
+            initial_s0, initial_s1 = find_state(
+                values[i:i + RNG_MATCHING_WINDOW])
             initial_offset = i
             break
         except RngMatcherError:
@@ -355,4 +381,4 @@ def rng_walker_for_birth(player_full):
 
     for offset, sync_iterations in valid_offsets:
         yield RngWalker(step_backwards(initial_s0, initial_s1, offset),
-                        sync_iterations - 1, len(valid_offsets) == 1)
+                        sync_iterations, len(valid_offsets) == 1)

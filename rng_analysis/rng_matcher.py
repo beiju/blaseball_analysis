@@ -284,31 +284,37 @@ def rng_state_for_values(values: List[float]) -> (int, int):
     raise RngMatcherNoSolution("Solver found no unique solutions")
 
 
-def validate_rng_for_player(generator, player_full):
+def validate_rng_for_player(generator, player_full, mismatches):
     player = player_full['data']
 
     # First, all attributes (except thwack, which is 'used up' by the block
     # boundary sync)
     for attr, generated_value in zip(attrs_ordered[1:], generator):
-        if player[attr] != generated_value and not (
+        if abs(player[attr] - generated_value) > 1e-12 and not (
                 # For some reason, dan bong's tragicness is exactly 0
-                attr == 'tragicness' and player[attr] == 0):
+                attr == 'tragicness' and
+                (player[attr] == 0 or player[attr] == 0.1)):
+            mismatches.append(attr)
             return False
 
     # If the player has cinnamon, it was generated after the other attrs
     if 'cinnamon' in player:
         if player['cinnamon'] != next(generator):
+            mismatches.append('cinnamon')
             return False
 
     if player['soul'] != int(next(generator) * 8 + 2):
+        mismatches.append('soul')
         return False
 
     if 'peanutAllergy' in player:
         if player['peanutAllergy'] != (next(generator) < 0.5):
+            mismatches.append('allergy')
             return False
 
     if 'fate' in player:
         if player['fate'] != int(next(generator) * 100):
+            mismatches.append('fate')
             return False
 
     # Players from before the first grand siesta have blood and coffee fields,
@@ -319,9 +325,11 @@ def validate_rng_for_player(generator, player_full):
         next(generator)
 
         if player['blood'] != int(next(generator) * 13):
+            mismatches.append('blood')
             return False
 
         if player['coffee'] != int(next(generator) * 13):
+            mismatches.append('coffee')
             return False
 
     return True
@@ -356,6 +364,7 @@ def rng_walker_for_birth(player_full):
 
     # Find all offsets that work
     valid_offsets = []
+    mismatches = []
     for offset in range(64):
         s0, s1 = step_backwards(initial_s0, initial_s1, offset)
 
@@ -364,19 +373,21 @@ def rng_walker_for_birth(player_full):
         for i, generated in enumerate(islice(generator,
                                              advance_generator_by,
                                              advance_generator_by + 128)):
-            if generated == values[0]:
+            if abs(generated - values[0]) < 1e-12:
                 # Synced!
                 sync_iterations = i
                 break
 
         if sync_iterations is None:
+            mismatches.append('sync')
             continue
 
-        if validate_rng_for_player(generator, player_full):
+        if validate_rng_for_player(generator, player_full, mismatches):
             valid_offsets.append(
                 (offset, advance_generator_by + sync_iterations))
 
     if len(valid_offsets) == 0:
+        print(f"Mismatches ({len(mismatches)}):", mismatches)
         raise RngMatcherNoSolution("Couldn't find any valid offsets")
 
     for offset, sync_iterations in valid_offsets:

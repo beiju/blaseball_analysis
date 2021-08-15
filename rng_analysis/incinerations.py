@@ -1,49 +1,20 @@
+from collections import defaultdict
 from itertools import cycle, islice
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 from rng_analysis.util import load_players_oldest_records
 from rng_matcher import rng_walker_for_birth, RngMatcherError
 
-replacements = {'Sixpack Dogwalker', 'Greer Gwiffin', 'Case Sports',
-                'Yrjö Kerfuffle', 'Cannonball Sports', 'Jomgy Rolsenthal',
-                'Bonk Jokes', 'Rai Spliff', 'Steph Weeks', 'Tiana Cash',
-                "Rylan O'Lantern", 'Allan Kranch', 'Frasier Shmurmgle',
-                'Scoobert Toast', 'Evelton McBlase', 'Eduardo Woodman',
-                'Usurper Violet', 'Alx Keming', 'Zippy DeShields',
-                'Khulan Sagaba', 'Goobie Ballson', 'Lachlan Shelton',
-                'Zeruel Kramer', 'Frankie Incarnate', 'Lenjamin Zhuge',
-                'Kennedy Meh', 'Ryuji Ngozi', 'Steals Mondegreen',
-                'Kurt Crueller', 'Sebastian Woodman', 'Sandie Turner',
-                'Inez Owens', 'Salih Ultrabass', 'Loubert Ji-Eun',
-                'Juice Collins', 'Emmett Owens', 'Charlatan Seabright',
-                'Atlas Jonbois', 'Norris Firestar', 'Alston Cerveza',
-                'Clarinet McCormick', 'Kline Greenlemon', 'Hiroto Cerna',
-                'Quack Enjoyable', 'Nandy Fantastic', 'Blood Hamburger',
-                'Commissioner Vapor', 'Sutton Bishop', 'Jaxon Buckley',
-                'Geepa Beanpot', 'Lancelot Kane', 'Stew Briggs',
-                'Scarlet Caster', 'Will Statter Jr', "Gunther O'Brian",
-                'Roscoe Sundae', 'Pannonica Oko', 'Lenny Spruce',
-                'Sixpack Santiago', 'Trinity Smaht', 'Alexander Horne',
-                'Donna Milicic', 'Lucien Patchwork', 'Finn James',
-                'Backpatch Rolsenthal', 'Adelaide Judochop', 'Yulia Skitter',
-                'Nickname Yamashita', 'Dudley Mueller', 'Anathema Elemefayo',
-                'Tai Beanbag', 'Jasper Blather', 'Combs Estes',
-                'Vernon Shotwell', 'Gallup Crueller', 'Millipede Aqualuft',
-                'Pudge Nakatamo', 'Bobbin Moss', 'Jon Halifax',
-                'Dervin Gorczyca', 'Paula Turnip', 'Orion Ultrabass',
-                'August Sky', 'Clove Ji-Eun', 'Kaj Statter Jr',
-                'Gloria Bugsnax', 'Yusef Puddles', 'Kevelyn Jeff',
-                'Jon Tumblehome', 'Trinity Roche', 'Beans McBlase',
-                'Sandford Garner', 'Ziwa Mueller', 'Caligula Lotus',
-                'Kiki Familia', 'Riley Firewall', 'Ruffian Scrobbles',
-                'Hotbox Sato', 'Rat Batson', 'Marion Shriffle', 'Annie Roland',
-                'Basilio Fig', 'Vito Kravitz', 'Silvaire Roadhouse',
-                'Scouse Bedazzle', 'Fitzgerald Blackburn', 'Mummy Melcon',
-                'Carmelo Plums', 'Gita Sparrow', 'Bennett Bluesky',
-                'Mikan Hammer', 'Hendricks Rangel', 'Randy Dennis',
-                'Paula Mason', 'Holden Stanton', 'Felix Garbage', 'Marco Stink',
-                'Halexandrey Walton', 'Collins Melon', 'Cory Twelve',
-                'Simon Haley', 'Thomas Kirby', 'York Silk', 'Nic Winkler',
-                'Hendricks Richardson', 'Murray Pony', 'Dan Holloway'}
+pattern_breakers = {
+    'Goobie Ballson',
+    'Yusef Puddles',
+    'Quack Enjoyable',
+    'Kiki Familia',
+    'Charlatan Seabright',
+}
 
 
 def roundrobin(*iterables):
@@ -62,15 +33,20 @@ def roundrobin(*iterables):
 
 
 def main():
+    incin_replacements = pd.read_csv('incinerations_mused.csv')
     players_oldest = load_players_oldest_records(exclude_initial=True)
 
+    normal_rolls_by_season = defaultdict(lambda: [])
+    unstable_rolls_by_season = defaultdict(lambda: [])
     total_synced = 0
     max_player_name_len = max(len(p['data']['name']) for p in players_oldest)
     for player in players_oldest:
         name = player['data']['name']
 
-        if name not in replacements:
+        incin = incin_replacements.loc[incin_replacements['name'] == name]
+        if len(incin) == 0:
             continue
+        season = incin['season'].iloc[0]
 
         try:
             walkers = rng_walker_for_birth(player)
@@ -98,6 +74,12 @@ def main():
                 at_4 = walker[-4]
                 at_3 = walker[-3]
 
+                if name == 'Quack Enjoyable':
+                    for i in range(100000):
+                        val = walker[-i]
+                        if val < 0.0005:
+                            print(f"Quack -{i}: {val}")
+
                 lowest_of_knowns, lowest_of_knowns_i = min(
                     [(at_3, 3), (at_4, 4), (at_5, 5), (at_98, 98), (at_99, 99)])
 
@@ -108,13 +90,52 @@ def main():
                     lowest_lowest_roll = lowest_roll
                     lowest_lowest_roll_i = lowest_roll_i
 
-            print(f"{spaces}{name} lowest of 3, 4, 5, 98, 99: "
+            if name not in pattern_breakers:
+                if incin['unstable'].iloc[0]:
+                    unstable_rolls_by_season[season].append(
+                        lowest_lowest_of_knowns)
+                else:
+                    normal_rolls_by_season[season].append(
+                        lowest_lowest_of_knowns)
+            print(f"{spaces}{name} s{season + 1:<2} lowest of 3, 4, 5, 98, 99: "
                   f"{lowest_lowest_of_knowns:.5f} at "
                   f"{lowest_lowest_of_knowns_i:>2}, lowest within 200: "
                   f"{lowest_lowest_roll:.5f} at "
                   f"{lowest_lowest_roll_i:>2}{synced}")
 
     print(total_synced)
+
+    fig, (normal_ax, unstable_ax) = plt.subplots(2, figsize=(12, 8))
+
+    for ax in (normal_ax, unstable_ax):
+        ax.set_ylim(24.5, 0.5)  # high before low to invert the axis
+        ax.set_ylabel("Season")
+        ax.set_yticks(np.arange(24) + 1)
+
+        yticks = ax.get_yticks()
+        for y0, y1 in zip(yticks[::2], yticks[1::2]):
+            ax.axhspan(y0 - 0.5, y1 - 0.5, color='black', alpha=0.1, zorder=0)
+
+    normal_ax.scatter(*incin_rolls_to_plot_format(normal_rolls_by_season))
+    normal_ax.set_title("Natural incineration rolls")
+    normal_ax.set_xlim(0, 0.001)
+
+    unstable_ax.scatter(*incin_rolls_to_plot_format(unstable_rolls_by_season))
+    unstable_ax.set_title("Unstable incineration rolls")
+    unstable_ax.set_xlim(0, 0.01)
+
+    fig.tight_layout()
+    plt.show()
+
+
+def incin_rolls_to_plot_format(olls_by_season):
+    xs = []
+    ys = []
+    for season, rolls in olls_by_season.items():
+        for roll in rolls:
+            xs.append(roll)
+            ys.append(season + 1)
+    return xs, ys
 
 
 def connect_replacements(players_oldest):

@@ -172,6 +172,9 @@ def sym_xs128p(slvr, sym_state0, sym_state1, generated):
 def find_state(inputs):
     knowns = []
     for input in inputs[::-1]:
+        if input is None:
+            raise RngMatcherError("Can't match on missing values")
+
         recovered = struct.unpack('<Q', struct.pack('d', input + 1))[0] & (
                 MASK >> 12)
         knowns.append(recovered)
@@ -284,22 +287,38 @@ def rng_state_for_values(values: List[float]) -> (int, int):
     raise RngMatcherNoSolution("Solver found no unique solutions")
 
 
+def attribute_matches(generated, expected):
+    if expected is None:
+        return True
+
+    return abs(expected - generated) < 1e-12
+
+
+def player_size_after_thwack(player_full):
+    player = player_full['data']
+
+    return (len(attrs_ordered) +
+            ('cinnamon' in player) +
+            1 +  # Soul
+            ('peanutAllergy' in player) +
+            ('fate' in player) +
+            (player_full['validFrom'] > '2021') * 3)
+
+
 def validate_rng_for_player(generator, player_full, mismatches):
     player = player_full['data']
 
-    # First, all attributes (except thwack, which is 'used up' by the block
-    # boundary sync)
-    for attr, generated_value in zip(attrs_ordered[1:], generator):
-        if abs(player[attr] - generated_value) > 1e-12 and not (
-                # For some reason, dan bong's tragicness is exactly 0
-                attr == 'tragicness' and
-                (player[attr] == 0 or player[attr] == 0.1)):
+    # First, all attributes
+    for attr, generated_value in zip(attrs_ordered, generator):
+        if (not attribute_matches(generated_value, player[attr]) and
+                not (attr == 'tragicness' and
+                     (player[attr] == 0 or player[attr] == 0.1))):
             mismatches.append(attr)
             return False
 
     # If the player has cinnamon, it was generated after the other attrs
     if 'cinnamon' in player:
-        if player['cinnamon'] != next(generator):
+        if not attribute_matches(next(generator), player['cinnamon']):
             mismatches.append('cinnamon')
             return False
 
@@ -362,6 +381,12 @@ def rng_walker_for_birth(player_full):
                                             128 - initial_offset)
     advance_generator_by = 64 - initial_offset
 
+    sync_to = None
+    for i, val in enumerate(values):
+        if val is not None:
+            sync_to = i
+            break
+
     # Find all offsets that work
     valid_offsets = []
     mismatches = []
@@ -371,9 +396,9 @@ def rng_walker_for_birth(player_full):
         generator = generate_numbers(s0, s1)
         sync_iterations = None
         for i, generated in enumerate(islice(generator,
-                                             advance_generator_by,
-                                             advance_generator_by + 128)):
-            if abs(generated - values[0]) < 1e-12:
+                                             advance_generator_by + sync_to,
+                                             advance_generator_by + sync_to + 128)):
+            if abs(generated - values[sync_to]) < 1e-12:
                 # Synced!
                 sync_iterations = i
                 break
@@ -382,6 +407,9 @@ def rng_walker_for_birth(player_full):
             mismatches.append('sync')
             continue
 
+        generator = islice(generate_numbers(s0, s1),
+                           advance_generator_by + sync_iterations,
+                           None)
         if validate_rng_for_player(generator, player_full, mismatches):
             valid_offsets.append(
                 (offset, advance_generator_by + sync_iterations))

@@ -1,26 +1,19 @@
 import json
-from collections import defaultdict
-from datetime import timedelta
+import time
 from functools import partial
-from itertools import cycle, islice
 
+import matplotlib.pyplot as plt
+import matplotlib.colors
+import matplotlib.patches
+import matplotlib.cm
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from blaseball_mike.models import Player, Team
-from dateutil.parser import parse
+from blaseball_mike.models import Stadium
 
 from rng_analysis.util import load_players_oldest_records
-from rng_matcher import rng_walker_for_birth, RngMatcherError, \
-    player_size_after_thwack
+from rng_matcher import rng_walker_for_birth, player_size_after_thwack
 
-
-def natural_rate(r):
-    return r['death rate']['stable'][1][0] / 100000
-
-
-def unstable_rate(r):
-    return r['death rate']['unstable'][1][0] / 100000
+HALL_BLUE = (89 / 255, 136 / 255, 255 / 255)
 
 
 def locate_incin(players, max_player_name_len, row):
@@ -28,6 +21,7 @@ def locate_incin(players, max_player_name_len, row):
 
     # Compute data
     walkers = list(rng_walker_for_birth(replacement))
+
     gen_size = player_size_after_thwack(replacement)
     expected_locs = [-5, -4, -3, gen_size, gen_size + 1]
     incin_roll, incin_roll_loc = min(
@@ -45,9 +39,16 @@ def locate_incin(players, max_player_name_len, row):
           f"{incin_roll:.10f} at thwack {incin_roll_loc}{inferred}")
 
     return pd.Series([incin_roll, incin_roll_loc,
-                      synced, row['replacement id']],
+                      synced, row['replacement id'], *walkers[0].state_at(0)],
                      index=['incin roll', 'incin roll location',
-                            'synced', 'replacement id'])
+                            'synced', 'replacement id', 's0', 's1'])
+
+
+def seasonal_forts(season):
+    if season > 12:
+        return [s.fortification for s in
+                Stadium.load_all_by_gameday(season, 80).values()]
+    return [0.5] * 24
 
 
 def main():
@@ -73,13 +74,15 @@ def main():
 
     observed_seasons = [r['season'] + 1 for r in observed_rates if
                         r['season'] != 'aggregate']
-    observed_natural = [natural_rate(r) for r in observed_rates if
-                        r['season'] != 'aggregate']
-    observed_unstable = [unstable_rate(r) for r in observed_rates if
-                         r['season'] != 'aggregate']
+    observed_stable = [r['death rate']['stable'][1][0] / 100000
+                       for r in observed_rates if r['season'] != 'aggregate']
+    observed_unstable = [r['death rate']['unstable'][1][0] / 100000
+                         for r in observed_rates if r['season'] != 'aggregate']
 
-    fig, (stable_ax, unstable_ax) = plt.subplots(2, figsize=(12, 8))
-
+    fig, (stable_ax, unstable_ax) = plt.subplots(2, figsize=(12, 8),
+                                                 constrained_layout=True)
+    fig.set_constrained_layout_pads(w_pad=12. / 72., h_pad=24. / 72.,
+                                    hspace=0. / 72., wspace=0. / 72.)
     for ax in (stable_ax, unstable_ax):
         ax.set_ylim(24.5, 0.5)  # high before low to invert the axis
         ax.set_ylabel("Season")
@@ -92,25 +95,72 @@ def main():
     stable_incins = incins[~incins['unstable']]
     unstable_incins = incins[incins['unstable']]
 
-    theorized_base_rate = 0.00025
+    theorized_base_rate = [
+        None,  # s1
+        0.000075,  # s2 -- low rate, but all eclipse
+        0.0005,  # s3 -- was 0.001 until day 6
+        0.00015,  # s4 -- moderate
+        0.00015,  # s5
+        0.00015,  # s6
+        None,  # s7 -- not comfortable calling this on so little data
+        0.00025,  # s8
+        0.00025,  # s9
+        0.00025,  # s10
+        None,  # s11 -- no eclipses
+    ]
     theorized_unstable_multiplier = 40
 
+    def add_threshold(start_season, threshold, alpha=0.015,
+                      seasons=1, threshold_start=0.0):
+        for season in range(start_season, start_season + seasons):
+            forts = seasonal_forts(season)
+            min_fort_i = min((f, i) for i, f in enumerate(forts))[1]
+            for i, fort in enumerate(forts):
+                t = threshold * (40/25 - fort * 30/25)
+                patch = matplotlib.patches.Rectangle(
+                    (threshold_start, season - 0.5), t - threshold_start,
+                    1, facecolor=(*HALL_BLUE, alpha),
+                    edgecolor=(HALL_BLUE if i == min_fort_i else None)
+                )
+                stable_ax.add_patch(patch)
+
+    add_threshold(2, 0.000075)
+    add_threshold(3, 0.0005)
+    add_threshold(3, 0.001, threshold_start=0.0005, alpha=0.002)
+    add_threshold(4, 0.00015, seasons=3)
+    add_threshold(8, 0.00025, seasons=3)
+    add_threshold(12, 0.00025, seasons=12)
+
+    cmap = matplotlib.cm.autumn
+    norm = matplotlib.colors.TwoSlopeNorm(vmin=0, vcenter=0.5, vmax=1)
+
     stable_ax.scatter(stable_incins['incin roll'],
-                      stable_incins['season'] + 1)
-    stable_ax.scatter(observed_natural, observed_seasons)
+                      stable_incins['season'] + 1,
+                      c=cmap(stable_incins['fortification']), zorder=4)
+    stable_ax.scatter(observed_stable, observed_seasons,
+                      c='black', marker='d', zorder=5)
     stable_ax.set_title("Natural incineration rolls")
-    stable_ax.vlines([theorized_base_rate], 0, 24, colors='red')
-    stable_ax.set_xlim(0, 0.001)
+    stable_ax.set_xlim(0, 0.0005)
+    stable_ax.text(0.000502, 3.5, "*", va='center',
+                   fontsize='x-large', fontweight='bold')
 
     unstable_ax.scatter(unstable_incins['incin roll'],
-                        unstable_incins['season'] + 1)
-    unstable_ax.scatter(observed_unstable, observed_seasons)
+                        unstable_incins['season'] + 1,
+                        c=cmap(unstable_incins['fortification']), zorder=4)
+    unstable_ax.scatter(observed_unstable, observed_seasons,
+                        c='black', marker='d', zorder=5)
     unstable_ax.set_title("Unstable incineration rolls")
-    unstable_ax.vlines([theorized_base_rate * theorized_unstable_multiplier],
-                       0, 24, colors='red')
+    # unstable_ax.vlines([theorized_base_rate * theorized_unstable_multiplier],
+    #                    0.5, 24.5, colors='red')
     unstable_ax.set_xlim(0, 0.01)
 
-    fig.tight_layout()
+    fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), aspect=40,
+                 pad=0, ax=[stable_ax, unstable_ax], label='Fortification')
+    plt.figtext(0.45, 0.51,
+                "* Season 3 had two incinerations with rolls above 0.0005. "
+                "The threshold was then changed from 0.001 to 0.0005 on Day 5.",
+                ha="center", fontsize=10)
+    # fig.tight_layout()
     plt.show()
 
 

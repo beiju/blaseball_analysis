@@ -119,6 +119,12 @@ class RngWalker:
 
         self.blocks = {}
 
+    def state_at(self, i):
+        i_relative_to_block = i + self.block_to_reference_offset
+        return step_directionally(self.block0_s0,
+                                  self.block1_s1,
+                                  i_relative_to_block)
+
     def __getitem__(self, i):
         """
         Return the RNG value at an offset of i from wherever this RngWalker is

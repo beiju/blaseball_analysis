@@ -1,0 +1,130 @@
+,season,day,weather,fortification,position,incinerated name,incinerated id,replacement name,replacement id,unstable,team,incin roll,incin roll location,synced
+0,1,12,7,0.5,batter,Fitzgerald Massey,ef32eb48-4866-49d0-ae58-9c4982e01142,Hendricks Rangel,b3d518b9-dc68-4902-b68c-0022ceb25aa0,False,Fridays,3.361064754292542e-06,-3,True
+1,1,21,7,0.5,batter,Jenna Maldonado,8ba7e1ff-4c6d-4963-8e0f-7096d14f4b12,Randy Dennis,5a26fc61-d75d-4c01-9ce2-1880ffb5550f,False,Dale,5.203997044289643e-05,-3,False
+2,1,23,7,0.5,batter,Tyreek Olive,31f83a89-44e3-47b7-8c9e-0dfdcd8bd30f,Paula Mason,c0177f76-67fc-4316-b650-894159dede45,False,Firefighters,5.457407855824492e-05,-3,True
+3,1,24,7,0.5,batter,Nora Perez,a071a713-a6a1-4b4c-bb3f-45d9fba7a08c,Holden Stanton,817dee99-9ccf-4f41-84e3-dc9773237bc8,False,Crabs,5.1779198688706174e-05,-3,True
+4,1,39,7,0.5,pitcher,Scrap Murphy,40db1b0b-6d04-4851-adab-dd6320ad2ed9,Felix Garbage,18af933a-4afa-4cba-bda5-45160f3af99b,False,Millenials,3.5577949405007914e-05,-3,False
+5,1,51,7,0.5,batter,Lars Mendoza,76c4853b-7fbc-4688-8cda-c5b8de1724e4,Marco Stink,87e6ae4b-67de-4973-aa56-0fc9835a1e1e,False,Steaks,6.582915605513051e-05,-3,True
+6,1,63,7,0.5,batter,Sosa Elftower,c86b5add-6c9a-40e0-aa43-e4fd7dd4f2c7,Halexandry Walton,03b80a57-77ea-4913-9be4-7a85c3594745,False,Magic,3.0370302610993605e-05,-3,True
+7,1,64,7,0.5,pitcher,Famous Oconnor,bca38809-81de-42ff-94e3-1c0ebfb1e797,Cory Twelve,2da49de2-34e5-49d0-b752-af2a2ee061be,False,Magic,5.2844607632218654e-05,-3,False
+8,1,64,7,0.5,batter,Dickerson Greatness,3afb30c1-1b12-466a-968a-5a9a21458c7f,Collins Melon,ef9f8b95-9e73-49cd-be54-60f84858a285,False,Spies,5.644027318330025e-05,-3,True
+9,1,71,7,0.5,batter,Zi Delacruz,c83a13f6-ee66-4b1c-9747-faa67395a6f1,Thomas Kirby,f73009c5-2ede-4dc4-b96d-84ba93c8a429,False,Steaks,2.846590280580763e-05,-3,True
+10,1,71,7,0.5,batter,Trevino Merritt,70a458ed-25ca-4ff8-97fc-21cbf58f2c2a,Simon Haley,020ed630-8bae-4441-95cc-0e4ecc27253b,False,Moist Talkers,1.4209064902459545e-06,-3,True
+11,1,73,7,0.5,batter,Jessi Wise,57448b62-f952-40e2-820c-48d8afe0f64d,York Silk,86d4e22b-f107-4bcf-9625-32d387fcb521,False,Fridays,3.545866622167715e-05,-3,False
+12,1,75,7,0.5,batter,Hurley Pacheo,b86237bb-ade6-4b1d-9199-a3cc354118d9,Nic Winkler,855775c1-266f-40f6-b07b-3a67ccdf8551,False,Flowers,3.1402199316410417e-06,-3,True
+13,1,79,7,0.5,batter,Alexandria Dracaena,262c49c6-8301-487d-8356-747023fa46a9,Hendricks Richardson,cf8e152e-2d27-4dcc-ba2b-68127de4e6a4,False,Jazz Hands,4.202412761578067e-05,-3,True
+14,1,87,7,0.5,batter,Aldon Anthony,4bda6584-6c21-4185-8895-47d07e8ad0c0,Murray Pony,2ca0c790-e1d5-4a14-ab3c-e9241c87fc23,False,Dale,6.9177231631911695e-06,-3,False
+15,1,92,7,0.5,batter,Cedric Gonzales,6fc3689f-bb7d-4382-98a2-cf6ddc76909d,Dan Holloway,667cb445-c288-4e62-b603-27291c1e475d,False,Pies,3.2461029934927055e-05,-3,False
+16,2,1,7,0.5,batter,Rhys Trombone,472f50c0-ef98-4d05-91d0-d6359eec3946,Dudley Mueller,2b5f5dd7-e31f-4829-bec5-546652103bc0,False,Sunbeams,0.00019690509982628335,-3,False
+17,2,3,7,0.5,batter,Bennett Browning,03097200-0d48-4236-a3d2-8bdb153aa8f7,Tiana Cash,3d4545ed-6217-4d7a-9c4a-209265eb6404,False,Garages,0.0008488185432411477,-3,True
+18,2,4,7,0.5,batter,Juan Rangel,1ba715f2-caa3-44c0-9118-b045ea702a34,Eduardo Woodman,32810dca-825c-4dbc-8b65-0702794c424e,False,Pies,0.0006351624618921026,-3,False
+19,2,4,7,0.5,pitcher,Paul Barnes,80a2f015-9d40-426b-a4f6-b9911ba3add8,Sandford Garner,f2c477fb-28ea-4fcb-943a-9fab22df3da0,False,Lovers,0.000471472723358346,-3,False
+20,2,4,7,0.5,batter,Bryanayah Chang,0fe896e1-108c-4ce9-97be-3470dde73c21,Hotbox Sato,2175cda0-a427-40fd-b497-347edcc1cd61,False,Flowers,0.0005075973271269074,-3,True
+21,2,5,7,0.5,batter,Theodore Passon,64b055d1-b691-4e0c-8583-fc08ba663846,Sixpack Santiago,a38ada0a-aeac-4a3d-b9a5-968687ccd2f9,False,Dale,0.000395772430410668,-3,False
+22,2,10,7,0.5,batter,Miguel Javier,43bf6a6d-cc03-4bcf-938d-620e185433e1,Kennedy Meh,23110c0f-2cf9-4d9c-ab2d-634f2f18867e,False,Lovers,0.00039601725392079956,-3,True
+23,2,13,7,0.5,batter,Chorby Soul,a1628d97-16ca-4a75-b8df-569bae02bef9,Sandie Turner,766dfd1e-11c3-42b6-a167-9b2d568b5dc0,False,Millenials,0.00032267204349967216,-3,True
+24,2,15,7,0.5,pitcher,Natha Kath,773712f6-d76d-4caa-8a9b-56fe1d1a5a68,Emmett Owens,21d52455-6c2c-4ee4-8673-ab46b4b926b4,False,Tacos,0.000476471951187607,-3,True
+25,2,18,7,0.5,batter,Kennedy Alstott,5b9727f7-6a20-47d2-93d9-779f0a85c4ee,Lachlan Shelton,9f85676a-7411-444a-8ae2-c7f8f73c285c,False,Moist Talkers,0.00022732890275278805,-3,False
+26,2,22,7,0.5,pitcher,Ogden Mendoza,d5b6b11d-3924-4634-bd50-76553f1f162b,August Sky,ae81e172-801a-4236-929a-b990fc7190ce,False,Jazz Hands,0.00037604184151440734,-3,False
+27,2,22,7,0.5,batter,Velasquez Meadows,8e1fd784-99d5-41c1-a6c5-6b947cec6714,Alexander Horne,c9e4a49e-e35a-4034-a4c7-293896b40c58,False,Sunbeams,0.00045024153832740055,-3,False
+28,2,39,7,0.5,batter,Sebastian Townsend,b4505c48-fc75-4f9e-8419-42b28dcc5273,Atlas Jonbois,f44a8b27-85c1-44de-b129-1b0f60bcb99c,False,Shoe Thieves,0.0003914386163699213,-3,False
+29,2,42,7,0.5,batter,Atlas Jonbois,f44a8b27-85c1-44de-b129-1b0f60bcb99c,Sebastian Woodman,15d3a844-df6b-4193-a8f5-9ab129312d8d,False,Shoe Thieves,0.00019406488014417356,-3,True
+30,2,43,7,0.5,batter,Tyler Violet,d744f534-2352-472b-9e42-cd91fa540f1b,Ziwa Mueller,8c8cc584-199b-4b76-b2cd-eaa9a74965e5,False,Moist Talkers,0.00012480718856533457,-3,False
+31,2,46,7,0.5,batter,Jorge Ito,3064c7d6-91cc-4c2a-a433-1ce1aabc1ad4,Caligula Lotus,f7715b05-ee69-43e5-a0e5-8e3d34270c82,False,Flowers,0.0002578122792111781,-3,False
+32,2,46,7,0.5,batter,Tiana Cash,3d4545ed-6217-4d7a-9c4a-209265eb6404,Greer Gwiffin,6c346d8b-d186-4228-9adb-ae919d7131dd,False,Garages,0.00023468169926954552,-3,False
+33,2,56,7,0.5,pitcher,Matteo Prestige,f9c0d3cb-d8be-4f53-94c9-fc53bcbce520,Gunther O'Brian,34267632-8c32-4a8b-b5e6-ce1568bb0639,False,Shoe Thieves,0.0003803292777200262,-3,False
+34,2,66,7,0.5,pitcher,Sam Solis,bd549bfe-b395-4dc0-8546-5c04c08e24a5,Evelton McBlase,a5f8ce83-02b2-498c-9e48-533a1d81aebf,False,Fridays,0.00016880215241177332,-3,False
+35,2,73,7,0.5,batter,Shaquille Torres,495a6bdc-174d-4ad6-8d51-9ee88b1c2e4a,Cedric Spliff,c31d874c-1b4d-40f2-a1b3-42542e934047,False,Garages,0.000351049005706372,-3,False
+36,2,75,7,0.5,batter,Blankenship Fischer,7b0f91aa-4d66-4362-993d-6ff60f7ce0ef,Blood Hamburger,f7847de2-df43-4236-8dbe-ae403f5f3ab3,False,Shoe Thieves,0.00017776762195698126,-3,False
+37,2,75,7,0.5,batter,Miki Santana,90c6e6ca-77fc-42b7-94d8-d8afd6d299e5,Fitzgerald Blackburn,8ecea7e0-b1fb-4b74-8c8c-3271cb54f659,False,Spies,0.0002628492345386757,-3,False
+38,2,75,7,0.5,batter,Hendricks Rangel,b3d518b9-dc68-4902-b68c-0022ceb25aa0,Basilio Fig,c755efce-d04d-4e00-b5c1-d801070d3808,False,Fridays,0.00039197376868060907,-3,False
+39,2,75,7,0.5,batter,Sebastian Sunshine,4941976e-31fc-49b5-801a-18abe072178b,Juice Collins,21cbbfaa-100e-48c5-9cea-7118b0d08a34,False,Fridays,0.0002099538835360626,-3,True
+40,2,79,7,0.5,pitcher,Derrick Krueger,bd9d1d6e-7822-4ad9-bac4-89b8afd8a630,Henry Marshallow,c6e2e389-ed04-4626-a5ba-fe398fe89568,False,Garages,5.392518300761928e-05,-3,False
+41,2,81,7,0.5,batter,Isaac Rubberman,2b1cb8a2-9eba-4fce-85cf-5d997ec45714,Vito Kravitz,2e13249e-38ff-46a2-a55e-d15fa692468a,False,Flowers,0.0002926124884974346,-3,True
+42,2,103,7,0.5,batter,Langley Wheeler,c83f0fe0-44d1-4342-81e8-944bb38f8e23,Kline Greenlemon,97f5a9cd-72f0-413e-9e68-a6ee6a663489,False,Steaks,0.0003319343297341071,-3,True
+43,2,110,7,0.5,batter,Landry Violence,d74a2473-1f29-40fa-a41e-66fa2281dfca,Paula Turnip,5bcfb3ff-5786-4c6c-964c-5c325fcc48d7,False,Tigers,0.00011601635494118412,-3,False
+44,3,13,7,0.5,batter,Whit Steakknife,33fbfe23-37bd-4e37-a481-a87eadb8192d,Stew Briggs,46721a07-7cd2-4839-982e-7046df6e8b66,False,Breath Mints,0.00014792433883492606,-3,False
+45,3,49,7,0.5,batter,Stevenson Monstera,05bd08d5-7d9f-450b-abfa-1788b8ee8b91,Combs Estes,0295c6c2-b33c-47dd-affa-349da7fa1760,False,Steaks,8.038677892652224e-05,-3,False
+46,3,54,7,0.5,batter,Eduardo Ingram,c73d59dd-32a0-49ce-8ab4-b2dbb7dc94ec,Lenny Spruce,c09e64b6-8248-407e-b3af-1931b880dbee,False,Breath Mints,5.952837223244245e-05,-3,True
+47,3,58,7,0.5,batter,Matheo Carpenter,ab9eb213-0917-4374-a259-458295045021,Gloria Bugsnax,8cd06abf-be10-4a35-a3ab-1a408a329147,False,Flowers,0.00012355318418255656,-3,True
+48,3,62,7,0.5,batter,Combs Duende,f8c20693-f439-4a29-a421-05ed92749f10,Finn James,f9930cb1-7ed2-4b9a-bf4f-7e35f2586d71,False,Crabs,6.7122400744246136e-06,-3,True
+49,3,97,7,0.5,batter,Morrow Doyle,18798b8f-6391-4cb2-8a5f-6fb540d646d5,Inez Owens,28964497-0efe-420c-9c1d-8574f224a4e9,False,Flowers,8.902589027415253e-05,-3,False
+50,4,39,7,0.5,batter,Richardson Turquoise,a5adc84c-80b8-49e4-9962-8b4ade99a922,Annie Roland,4f7d7490-7281-4f8f-b62e-37e99a7c46a0,False,Magic,4.1120337564315435e-05,-3,True
+51,4,85,7,0.5,batter,Thomas England,3a96d76a-c508-45a0-94a0-8f64cd6beeb4,Sixpack Dogwalker,bc4187fa-459a-4c06-bbf2-4e0e013d27ce,False,Fridays,2.3214425243223147e-05,-3,True
+52,4,90,7,0.5,batter,Emmett Internet,25376b55-bb6f-48a7-9381-7b8210842fad,Sutton Bishop,5eac7fd9-0d19-4bf4-a013-994acc0c40c0,False,Sunbeams,6.901790752489312e-05,-3,True
+53,5,20,7,0.5,batter,Forrest Bookbaby,2ae8cbfc-2155-4647-9996-3f2591091baf,Alston Cerveza,611d18e0-b972-4cdd-afc2-793c56bfe5a9,False,Pies,0.00010615187507645452,-3,False
+54,5,30,7,0.5,batter,Caligula Lotus,f7715b05-ee69-43e5-a0e5-8e3d34270c82,Hiroto Cerna,d51f1fe8-4ab8-411e-b836-5bba92984d32,False,Flowers,7.331497805029841e-05,-3,False
+55,5,83,7,0.5,batter,Randall Marijuana,8604e861-d784-43f0-b0f8-0d43ea6f7814,Steph Weeks,18f45a1b-76eb-4b59-a275-c64cf62afce0,False,Jazz Hands,6.687445099107237e-05,-3,False
+56,5,94,7,0.5,batter,Mickey Woods,15ae64cd-f698-4b00-9d61-c9fffd037ae2,Jaxon Buckley,405dfadf-d435-4307-82f6-8eba2287e87a,False,Pies,0.00010202068073894566,-3,False
+57,6,23,7,0.5,batter,Wesley Dudley,f967d064-0eaf-4445-b225-daed700e044b,Nandy Fantastic,ec68845f-3b26-412f-8446-4fef34e09c77,False,Millenials,8.848125098825932e-06,29,False
+58,6,31,7,0.5,batter,Moody Cookbook,70ccff1e-6b53-40e2-8844-0a28621cb33e,Carmelo Plums,c18961e9-ef3f-4954-bd6b-9fe01c615186,True,Tigers,0.0030999899194157354,30,False
+59,6,31,7,0.5,batter,Elijah Bates,d1a7c13f-8e78-4d2e-9cae-ebf3a5fcdb5d,Kiki Familia,98a98014-9636-4ece-a46a-4625b47c65d5,True,Moist Talkers,0.005235970478501439,30,True
+60,6,31,7,0.5,batter,Mclaughlin Scorpler,a311c089-0df4-46bd-9f5d-8c45c7eb5ae2,Frasier Shmurmgle,be35caba-b16a-4e0d-b927-4da857f4cdb5,True,Tigers,0.004395701054871859,30,False
+61,6,32,7,0.5,batter,Kiki Familia,98a98014-9636-4ece-a46a-4625b47c65d5,Quack Enjoyable,86adac6f-c694-44ac-9560-758de7eac937,False,Moist Talkers,2.091303071294348e-05,29,True
+62,6,32,7,0.5,batter,Antonio Wallace,248ccf3d-d5f6-4b69-83d9-40230ca909cd,Beans McBlase,dddb6485-0527-4523-9bec-324a5b66bf37,True,Moist Talkers,0.004473638583040618,30,False
+63,6,58,7,0.5,batter,Dominic Marijuana,7310c32f-8f32-40f2-b086-54555a2c0e86,Charlatan Seabright,c4dec95e-78a1-4840-b209-b3b597181534,True,Millenials,0.001896532864893219,30,True
+64,6,61,7,0.5,batter,Murray Pony,2ca0c790-e1d5-4a14-ab3c-e9241c87fc23,Cannonball Sports,c0998a08-de15-4187-b903-2e096ffa08e5,True,Dale,0.0008422933038974012,30,False
+65,6,66,7,0.5,batter,Sebastian Telephone,14d88771-7a96-48aa-ba59-07bae1733e96,Gallup Crueller,e7ecf646-e5e4-49ef-a0e3-10a78e87f5f4,True,Steaks,0.001571406980766188,30,False
+66,6,70,7,0.5,pitcher,Yazmin Mason,afc90398-b891-4cdf-9dea-af8a3a79d793,Mummy Melcon,1db2f602-64b1-4a5c-8697-1932cc2c6df1,True,Tigers,0.004545727081792794,30,False
+67,6,70,7,0.5,batter,Frasier Shmurmgle,be35caba-b16a-4e0d-b927-4da857f4cdb5,Usurper Violet,f245f6c6-4613-40f5-bc3b-85aa9ee3cf7e,True,Tigers,0.002738293269066938,30,False
+68,6,80,7,0.5,batter,Workman Gloom,bd4c6837-eeaa-4675-ae48-061efa0fd11a,Commissioner Vapor,a7d8196a-ca6b-4dab-a9d7-c27f3e86cc21,True,Moist Talkers,0.002091812949888805,30,False
+69,6,95,7,0.5,batter,Boyfriend Monreal,493a83de-6bcf-41a1-97dd-cc5e150548a3,Pudge Nakatamo,cc11963b-a05b-477b-b154-911dc31960df,True,Breath Mints,0.002680565714841432,30,False
+70,6,106,7,0.5,batter,Miguel Wheeler,cd68d3a6-7fbc-445d-90f1-970c955e32f4,Case Sports,8d337b47-2a7d-418d-a44e-ef81e401c2ef,True,Wild Wings,0.00046832816657893517,30,False
+71,7,9,7,0.5,batter,Hobbs Cain,25f3a67c-4ed5-45b6-94b1-ce468d3ead21,Rai Spliff,733d80f1-2485-40f7-828b-fd7cd8243a01,False,Pies,2.0411498524275373e-05,29,False
+72,7,35,7,0.5,batter,José Haley,bd8d58b6-f37f-48e6-9919-8e14ec91f92a,Goobie Ballson,ab36c776-b520-429b-a85f-bf633d7b081a,False,Firefighters,0.00019944037707020357,29,True
+73,8,63,7,0.5,batter,Tillman Henderson,f70dd57b-55c4-4a62-a5ea-7cc4bf9d8ac1,Silvaire Roadhouse,c6a19154-7438-4c4f-b786-2dfaf5951f0f,False,Crabs,0.00014627933076094557,29,False
+74,9,12,7,0.5,batter,Yeong-Ho Benitez,ecb8d2f5-4ff5-4890-9693-5654e00055f6,Yusef Puddles,dd6044ef-c635-4aed-97bd-d18068432b8f,False,Pies,4.1925022148392443e-05,29,True
+75,9,38,7,0.5,batter,Annie Roland,4f7d7490-7281-4f8f-b62e-37e99a7c46a0,Bonk Jokes,2ffbaec8-a646-4435-a17a-3a0a2b5f3e16,False,Magic,2.0598226968537858e-07,29,False
+76,11,78,7,0.5,batter,Joshua Butt,69196296-f652-42ff-b2ca-0d9b50bd9b7b,Gita Sparrow,5831a238-8efe-4d53-a483-1ad681e50ac3,False,Firefighters,0.00017471599954732575,-4,False
+77,11,78,7,0.5,batter,Case Sports,8d337b47-2a7d-418d-a44e-ef81e401c2ef,Roscoe Sundae,c9a22fa4-1721-4eef-a1a6-620cdf7d377f,False,Wild Wings,0.00014783917627902987,-4,False
+78,12,12,7,0.5,batter,Sutton Picklestein,4e6ad1a1-7c71-49de-8bd5-c286712faf9e,Kurt Crueller,114100a4-1bf7-4433-b304-6aad75904055,False,Magic,0.00022437805880382022,-4,False
+79,12,19,7,0.5,batter,Hotbox Sato,2175cda0-a427-40fd-b497-347edcc1cd61,Alx Keming,070758a0-092a-4a2c-8a16-253c835887cb,False,Shoe Thieves,0.0001425343777454735,-4,False
+80,12,29,7,0.5,batter,Hands Scoresburg,535f4e67-a54b-427a-9ca1-1296d7387876,Jasper Blather,99766c1b-c590-4261-b1b7-3e9c7fc35608,False,Mechanics,6.566097243254632e-06,-4,False
+81,12,42,7,0.5,batter,Raúl Leal,2e6d4fa9-f930-47bd-971a-dd54a3cf7db1,Riley Firewall,9d6f3d23-bc26-40e6-93aa-0b1c693e0ba8,False,Dale,0.00017448955561816248,-4,True
+82,12,76,7,0.27,batter,Theodore Holloway,3a8c52d7-4124-4a65-a20d-d51abcbe6540,Norris Firestar,22d4c06d-26c2-4031-ae7f-fd0eeb92f57d,False,Spies,0.0002097538919372255,-4,False
+83,12,77,7,0.65,batter,Lawrence Horne,2b9f9c25-43ec-4f0b-9937-a5aa23be0d9e,Tai Beanbag,f236bd5b-4ff1-4154-a3cd-7cb3c0ddaa5b,False,Wild Wings,0.00018940216822294076,-4,True
+84,12,78,7,0.52,batter,Ruffian Applesauce,11f25eae-465f-43cc-9366-f19addc803bc,Adelaide Judochop,b643a520-af38-42e3-8f7b-f660e52facc9,False,Mechanics,2.654146607583563e-05,-4,False
+85,12,88,7,0.52,batter,Augusta Chadwell,a9812a8e-67c4-434c-85cb-6ddf785cadf2,Loubert Ji-Eun,27839754-c351-43ec-9bff-ca662a2385b9,False,Worms,0.00015819912421499716,-4,False
+86,12,97,7,0.27,batter,Sutton Bishop,5eac7fd9-0d19-4bf4-a013-994acc0c40c0,Kaj Statter Jr,72ca8ed5-a8c7-4571-9745-80de5a49b2d1,False,Sunbeams,2.8977871042723535e-06,-4,True
+87,12,97,7,0.27,batter,Combs Estes,0295c6c2-b33c-47dd-affa-349da7fa1760,Dervin Gorczyca,e69db30d-74ac-4265-8da6-467b0d25694b,False,Jazz Hands,0.00014774688871499464,-4,False
+88,12,98,7,0.27,batter,Norris Firestar,22d4c06d-26c2-4031-ae7f-fd0eeb92f57d,Yrjö Kerfuffle,41ad8060-2bbe-4872-a879-22cb102bb64c,False,Spies,0.00016797995357276108,-4,False
+89,13,21,7,0.53,batter,Sebastian Woodman,15d3a844-df6b-4193-a8f5-9ab129312d8d,Bennett Bluesky,fcb08e4f-df3a-446c-ab50-58a496ac5f3f,False,Shoe Thieves,0.00016484708174946405,-4,False
+90,13,35,7,0.49,batter,Son Scotch,285ce77d-e5cd-4daa-9784-801347140d48,Jomgy Rolsenthal,006e1d32-9742-48ef-a6ba-36545e93b9e3,False,Spies,0.00011866004096572347,-4,True
+91,13,86,7,0.42,batter,York Silk,86d4e22b-f107-4bcf-9625-32d387fcb521,Lucien Patchwork,238f8c50-311f-4486-a734-e1a17606af4d,False,Moist Talkers,0.00011724510288790846,-4,False
+92,14,13,7,0.53,batter,Nicholas Vincent,10ea5d50-ec88-40a0-ab53-c6e11cc1e479,Rat Batson,abbd5ec5-a15b-421c-b0c5-cd80d8907373,False,Tacos,4.05222045756215e-05,-4,False
+93,15,1,7,0.65,batter,Moses Mason,75f9d874-5e69-438d-900d-a3fcb1d429b3,Salih Ultrabass,73a934de-3db1-4553-97f2-9e7b57744b34,False,Flowers,0.0001424410301431589,-5,True
+94,15,87,7,0.52,pitcher,Chorby Soul,a1628d97-16ca-4a75-b8df-569bae02bef9,Mikan Hammer,e97e9b74-8011-4415-b22c-8282f2228683,True,Millenials,0.0012797200758218885,-5,False
+95,15,91,7,0.59,batter,Winnie Mccall,413b3ddb-d933-4567-a60e-6d157480239d,Anathema Elemefayo,c0c85be4-ff26-470f-8135-af771fd21e51,False,Millenials,0.00014168537700465222,-5,False
+96,16,0,7,0.65,batter,Chorby Soul,a1628d97-16ca-4a75-b8df-569bae02bef9,Trinity Smaht,97af97a7-19dc-4d18-9f72-8bd89f7eeaa8,True,Crabs,0.0032282750486445355,-5,False
+97,16,1,7,0.65,pitcher,Luis Acevedo,425f3f84-bab0-4cf2-91c1-96e78cf5cd02,Jon Halifax,b61b2871-7254-49b3-b009-174a23acaa1a,True,Crabs,0.002537751088181661,-5,True
+98,16,11,7,0.53,batter,Pudge Nakamoto,cc11963b-a05b-477b-b154-911dc31960df,Donna Milicic,2859166d-6aed-4262-b05b-db85c49b3391,False,Shoe Thieves,0.00018307204468470673,-5,False
+99,16,35,7,0.52,batter,Hiroto Cerna,d51f1fe8-4ab8-411e-b836-5bba92984d32,Allan Kranch,4c86a500-d538-4b83-b321-d762533d7660,False,Flowers,0.00012861301282485194,-5,True
+100,16,43,7,0.59,batter,Stijn Strongbody,e2f39815-5291-4dcf-ba19-97dcf0c015e9,Rylan O'Lantern,d5ef3cfa-b9a6-4e16-a3df-6c236e8bdb3b,False,Lift,7.710636201929688e-05,-5,False
+101,16,53,7,0.56,batter,Hercules Alighieri,6ebac746-6685-4d0f-8e84-6b21299b5169,Jon Tumblehome,3c19aa93-3f9d-4be0-ae5a-8ade100a9668,False,Georgias,0.00014040049142050037,-5,True
+102,16,61,7,0.52,batter,Allison Abbott,1068f44b-34a0-42d8-a92e-2be748681a6f,Frankie Incarnate,c3dc7aa2-e27b-4859-bbf0-47ba66c03186,False,Steaks,7.929256041538935e-06,-5,False
+103,17,2,7,0.61,batter,Tamara Crankit,0f61d948-4f0c-4550-8410-ae1c7f9f5613,Zippy DeShields,3ab4ec02-17d9-4c4a-b956-aa170bf58a6e,False,Jazz Hands,4.363940965856905e-05,-5,True
+104,17,31,7,0.27,batter,Aurora Blortles,2e94fa0d-453f-4925-8ea0-c0a53e38108d,Scarlet Caster,1448f1f3-d76f-45c1-a5c1-54f22544000b,False,Wild Wings,9.289549811963838e-05,-5,False
+105,17,53,7,0.27,batter,Bauer Zimmerman,b9293beb-d199-4b46-add9-c02f9362d802,Lancelot Kane,4304bcf9-239a-4aa2-a410-56a487217a2a,False,Jazz Hands,7.396301023643304e-05,-5,True
+106,17,69,7,0.3,batter,Hewitt Best,88cd6efa-dbf2-4309-aabe-ec1d6f21f98a,Trinity Roche,5679d5de-f417-45db-ab8d-49b92e744486,False,Breath Mints,0.00010518253902236374,-5,False
+107,17,89,7,0.6,batter,Chorby Soul III,b28bb7f7-2d8c-4781-8808-83844df7e732,Zeruel Kramer,a3ea0e93-c9f5-4f85-8acd-c3c5ce8601fa,True,Crabs,0.006979713081920691,-5,False
+108,18,6,7,0.41,batter,Logan Horseman,c22e3af5-9001-465f-b450-864d7db2b4a0,Bobbin Moss,87d5d848-a1b1-4e3e-b3ab-5c47433f066e,False,Dale,0.00024501205108085067,-5,False
+109,18,14,7,0.1,batter,Wichita Toaster,c07ab5a8-ece3-4c4d-b2d2-98e3a7cf864f,Nickname Yamashita,66e8f8fb-22f9-4591-9435-37dc93493202,False,Wild Wings,0.00023071877902269833,-5,False
+110,18,21,7,0.1,batter,Igneus Delacruz,4f69e8c2-b2a1-4e98-996a-ccf35ac844c5,Millipede Aqualuft,9a9bb4f5-d2a5-4ce2-b715-9e2c74a65502,False,Worms,0.0003535731262287456,-5,False
+111,18,41,7,0.61,batter,Carmelo Plums,c18961e9-ef3f-4954-bd6b-9fe01c615186,Geepa Beanpot,b59cdb56-4a85-476f-b775-62204eefbe92,False,Firefighters,0.00013805636433894541,-5,False
+112,18,103,7,0.73,batter,Sparks Beans,1c73f91e-0562-480d-9543-2aab1d5e5acd,Lenjamin Zhuge,1b7e9328-bda4-4961-a18f-53f43a5b4136,False,Garages,9.995420391639698e-05,-5,False
+113,19,47,7,0.56,batter,Niq Nyong'o,409d1c96-760b-4a96-9a3c-481112ddf37b,Clove Ji-Eun,73aa5478-ec4c-4ec3-8a96-984d57539f0c,False,Georgias,0.0001536328237430329,-5,False
+114,19,78,7,0.38,pitcher,Alejandro Leaf,f741dc01-2bae-4459-bfc0-f97536193eea,Vernon Shotwell,fab66c3a-0ed4-4fdb-a31a-719c45b8092e,False,Shoe Thieves,8.278866290511999e-05,-5,False
+115,20,11,7,0.38,batter,Gerund Pantheocide,62ae6aa9-e346-4faa-b07c-1f7623580015,Steals Mondegreen,1dc1b683-baf8-4a3d-9038-20eaac71f5d8,False,Lift,6.856322983406216e-05,-5,True
+116,21,8,7,0.33,batter,Goobie Ballson,ab36c776-b520-429b-a85f-bf633d7b081a,Pannonica Oko,b3cf5842-83f8-4947-918e-e0c2b1dd03a6,False,Tacos,0.0001724007265095917,-5,True
+117,21,18,7,0.53,pitcher,Brock Forbes,97dfc1f6-ac94-4cdc-b0d5-1cb9f8984aa5,Backpatch Rolsenthal,4dc3ea1a-f008-44de-9fbe-4811552ef662,False,Flowers,4.811926878911521e-05,-5,False
+118,21,23,7,0.1,batter,Yong Wright,ce0e57a7-89f5-41ea-80f9-6e649dd54089,Kevelyn Jeff,c4cd3c19-f59b-4e03-bedb-ed3cc944982e,False,Wild Wings,9.773067119067669e-05,-5,True
+119,22,62,7,0.73,batter,Helga Washington,a8a5cf36-d1a9-47d1-8d22-4a665933a7cc,Ryuji Ngozi,3d5a37b6-97f9-4790-8835-69cc813f91f3,True,Breath Mints,0.0038000120465071507,-5,False
+120,22,62,7,0.73,batter,Jon Halifax,b61b2871-7254-49b3-b009-174a23acaa1a,Khulan Sagaba,ff91500d-c600-4c64-8432-96df403a1dfa,True,Breath Mints,0.003310035427880109,-5,False
+121,22,64,7,0.46,batter,Pudge Nakamoto,cc11963b-a05b-477b-b154-911dc31960df,Scoobert Toast,8e0b5ae4-66b7-4acd-9464-9a7cf266f1da,False,Worms,1.0524656512522768e-05,-5,False
+122,22,89,7,0.53,pitcher,Gunther O'Brian,34267632-8c32-4a8b-b5e6-ce1568bb0639,Orion Ultrabass,190f5b6a-c1d2-4ff3-94bb-756919bcab2b,True,Shoe Thieves,0.008750285731424112,-5,False
+123,22,96,7,0.6,batter,Helga Moreno,0eea4a48-c84b-4538-97e7-3303671934d2,Yulia Skitter,24e4d271-6dff-4c68-81f4-0e9ecd4dc75c,True,Lovers,0.007619639836491832,-5,True
+124,23,3,26,0.59,batter,Adalberto Tosser,d0d7b8fe-bad8-481f-978e-cb659304ed49,Ruffian Scrobbles,79359304-b600-42e9-9df6-c9599d2ab393,False,Flowers,2.6623082079346716e-05,-5,False
+125,23,5,26,0.69,batter,Tot Clark,e3c514ae-f813-470e-9c91-d5baf5ffcf16,Marion Shriffle,cbe48f62-1ec9-4983-af1b-edcf956dfd40,False,Garages,3.763757315877747e-05,-5,True
+126,23,25,26,0.42,batter,Bright Zimmerman,60026a9d-fc9a-4f5a-94fd-2225398fa3da,Scouse Bedazzle,7e347b81-8d83-47aa-bdb7-9dfe9d23a3dd,True,Pies,0.001825596737619506,-5,True
+127,23,33,26,0.42,batter,Lenny Marijuana,4ed61b18-c1f6-4d71-aea3-caac01470b5c,Clarinet McCormick,e50b4b71-b004-4083-ae64-1fc6533368c3,True,Queens,0.0018504478303087435,-5,True
+128,23,66,26,0.73,batter,Peanut Holloway,667cb445-c288-4e62-b603-27291c1e475d,Will Statter Jr,cb729e35-3313-4d8d-b131-a76c2eac9dff,True,Pies,0.001260959464529865,-5,False

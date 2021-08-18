@@ -50,7 +50,7 @@ season,day,weather,fortification,position,incinerated name,incinerated id,replac
 3,62,7,0.5,batter,Combs Duende,f8c20693-f439-4a29-a421-05ed92749f10,Finn James,f9930cb1-7ed2-4b9a-bf4f-7e35f2586d71,FALSE,Crabs
 3,97,7,0.5,batter,Morrow Doyle,18798b8f-6391-4cb2-8a5f-6fb540d646d5,Inez Owens,28964497-0efe-420c-9c1d-8574f224a4e9,FALSE,Flowers
 4,39,7,0.5,batter,Richardson Turquoise,a5adc84c-80b8-49e4-9962-8b4ade99a922,Annie Roland,4f7d7490-7281-4f8f-b62e-37e99a7c46a0,FALSE,Magic
-4,85,7,0.5,batter,Thomas England,,Sixpack Dogwalker,3a96d76a-c508-45a0-94a0-8f64cd6beeb4,FALSE,Fridays
+4,85,7,0.5,batter,Thomas England,3a96d76a-c508-45a0-94a0-8f64cd6beeb4,Sixpack Dogwalker,bc4187fa-459a-4c06-bbf2-4e0e013d27ce,FALSE,Fridays
 4,90,7,0.5,batter,Emmett Internet,25376b55-bb6f-48a7-9381-7b8210842fad,Sutton Bishop,5eac7fd9-0d19-4bf4-a013-994acc0c40c0,FALSE,Sunbeams
 5,20,7,0.5,batter,Forrest Bookbaby,2ae8cbfc-2155-4647-9996-3f2591091baf,Alston Cerveza,611d18e0-b972-4cdd-afc2-793c56bfe5a9,FALSE,Pies
 5,30,7,0.5,batter,Caligula Lotus,f7715b05-ee69-43e5-a0e5-8e3d34270c82,Hiroto Cerna,d51f1fe8-4ab8-411e-b836-5bba92984d32,FALSE,Flowers

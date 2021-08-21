@@ -112,7 +112,7 @@ def load_attack_rate():
     next_print = datetime.now()
     query = {
         'season_min': 14,  # First consumer attack was in season 14
-        # 'type': "_or_".join((str(i) for i in EVENT_TYPES))
+        # 'type': "_or_".join((str(i) for i in RNG_EVENT_TYPES))
     }
     for event in eventually.search(query=query, limit=-1):
         if event['type'] not in EVENT_TYPES:

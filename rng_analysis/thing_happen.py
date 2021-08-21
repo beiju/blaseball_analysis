@@ -1,18 +1,20 @@
 import asyncio
-from datetime import datetime, timedelta
-from typing import List, Tuple, Union, Optional
+from datetime import timedelta
 
-import matplotlib.pyplot as plt, mpld3
+import matplotlib.pyplot as plt
+import mpld3
 import numpy as np
 import pandas as pd
 from dateutil.parser import parse as parse_date
-from lark import Lark, Transformer
 from matplotlib.collections import LineCollection
 from mpld3 import plugins
 
+from rng_analysis.load_fragments import load_fragments
+
 SEASON_TIME_URL = "https://api.sibr.dev/corsmechanics/time/season/"
 
-FALSE_POSITIVES = {
+# Some false positives are included in the output. Exclude known ones.
+IGNORE_EVENTS = {
     (2980034044015368671, 15193173511404081830)
 }
 
@@ -23,116 +25,6 @@ CATEGORY_COLORS = ['#e41a1c', '#4daf4a', '#ff7f00', '#ffff33', '#377eb8',
 LABEL_NAMES = ["Deploy", "Player generation", "Party", "Party (LOTP)",
                "Party (Hotel Motel)", "Consumer attack", "LCD Soundsystem",
                "Recongealed differently", "Shadowed", "Night shift"]
-
-
-class SeasonTimes:
-    def __init__(self, number, start, end, election):
-        self.number = number
-        self.start = parse_date(start)
-        self.end = parse_date(end)
-        self.election = election
-
-    @property
-    def duration(self):
-        return self.end - self.start
-
-    def contains(self, timestamp):
-        if timestamp is None:
-            return False
-        return self.start < timestamp < self.end
-
-
-class Entry:
-    def __init__(self,
-                 pos: int,
-                 state: Tuple[Tuple[int, int], int],
-                 name: Union[str, Tuple[str, str]],
-                 timestamp: Optional[datetime] = None):
-        self.pos = pos
-        self.state = state
-        try:
-            (self.name, self.type) = name
-        except ValueError:
-            self.name = name
-            self.type = None
-        self.timestamp = timestamp
-
-
-class Fragment:
-    def __init__(self, aligned: bool, anchors: List[Entry],
-                 events: List[Entry]):
-        self.aligned = aligned
-        self.anchors = anchors
-        self.events = events
-
-
-class FragmentsTransformer(Transformer):
-    def true(self, _):
-        return True
-
-    def false(self, _):
-        return False
-
-    def fragments(self, node):
-        return node
-
-    def fragment(self, node):
-        assert len(node) == 3
-        return Fragment(*node)
-
-    def anchors(self, node):
-        # This function does do something -- it unwraps from a parser type to a
-        # python type
-        return node
-
-    def events(self, node):
-        return node
-
-    def anchor_entry(self, node):
-        return Entry(*node)
-
-    def event_entry(self, node):
-        return Entry(*node)
-
-    def pos(self, node):
-        assert len(node) == 1
-        return int(node[0].value)
-
-    def state(self, node):
-        assert len(node) == 3
-        return ((int(node[0].value), int(node[1].value)),
-                int(node[2].value))
-
-    def name_any(self, node):
-        assert len(node) == 1
-        return node[0].value
-
-    def name_roll(self, node):
-        assert len(node) == 2
-        return (node[0].value, node[1].value)
-
-    def timestamp(self, node):
-        assert len(node) == 1
-        return parse_date(node[0].value)
-
-
-def fragments_to_plot(season: SeasonTimes, fragments: List[Fragment]):
-    for fragment in fragments:
-        timestamps = [(e.timestamp, e.type) for e in fragment.events
-                      if season.contains(e.timestamp)]
-
-        if timestamps:
-            yield season.number, *zip(*timestamps)
-
-        # if timestamps:
-        #     min_t = min(timestamps)
-        #     max_t = max(timestamps)
-        #
-        #     duration: timedelta = max_t - min_t
-        #     middle: datetime = min_t + duration / 2
-        #
-        #     yield ([(middle - season.start).total_seconds()],
-        #            duration.total_seconds())
 
 
 async def time_from_url(session, url, key):
@@ -148,56 +40,12 @@ async def season_times(session, season):
 
 
 async def main():
-    print("Creating parser...")
-    parser = Lark(r"""
-fragments: fragment*
+    seasons = pd.read_csv('data/season_times.csv')
 
-fragment: _frag_start anchors events _frag_end
-
-_frag_start: "----- FRAGMENT START (aligned? " bool ")" _NEWLINE
-_frag_end: "----- FRAGMENT END" _NEWLINE
-
-anchors: "anchors:" _NEWLINE anchor_entry*
-events: "events:" _NEWLINE event_entry*
-
-anchor_entry: "-" pos state name_any _NEWLINE
-event_entry: "-" pos state name_roll timestamp _NEWLINE
-
-pos: "pos=" INT
-state: "state=(" INT "," INT ")+" INT
-name_any: "name=" ANY
-name_roll: "name=" NAME "/" ROLL_TYPE
-timestamp.2: "timestamp=" DATE
-bool: "true" -> true
-    | "false" -> false
-
-ANY: /[^\n]+/
-NAME: /[^\/\n]+/
-ROLL_TYPE: WORD
-BOOL: "true" | "false"
-DATE: INT "-" INT "-" INT "T" INT ":" INT ":" INT ("." INT)? "Z"
-_NEWLINE: NEWLINE
-
-%import common.INT
-%import common.WS
-%import common.WORD
-%import common.NEWLINE
-%ignore " "
-""", start='fragments', debug=True)
-    print("Parsing fragments...")
-    with open('all_stats8.txt', 'r') as f:
-        fragments_raw = parser.parse(f.read())
-
-    print("Transforming parse tree...")
-    fragments = FragmentsTransformer().transform(fragments_raw)
-
-    print("Getting season times...")
-    seasons = pd.read_csv('season_times.csv')
-
-    with open('deploys.txt', 'r') as f:
+    with open('data/deploys.txt', 'r') as f:
         deploys = [parse_date(line) for line in f.readlines()]
 
-    print("Massaging data...")
+    fragments = load_fragments('data/all_stats8.txt')
 
     fig, ax = plt.subplots(1, figsize=[24, 6])
     ax.set_title("Thing Happen")
@@ -224,7 +72,7 @@ _NEWLINE: NEWLINE
             for event in fragment.events:
                 if event.timestamp is None:
                     continue
-                if event.state[0] in FALSE_POSITIVES:
+                if event.state[0] in IGNORE_EVENTS:
                     continue
                 event_time_as_delta: timedelta = event.timestamp - start
 

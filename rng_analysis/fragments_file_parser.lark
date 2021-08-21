@@ -1,0 +1,33 @@
+fragments: fragment*
+
+fragment: _frag_start anchors events _frag_end
+
+_frag_start: "----- FRAGMENT START (aligned? " bool ")" _NEWLINE
+_frag_end: "----- FRAGMENT END" _NEWLINE
+
+anchors: "anchors:" _NEWLINE anchor_entry*
+events: "events:" _NEWLINE event_entry*
+
+anchor_entry: "-" pos state name_any _NEWLINE
+event_entry: "-" pos state name_roll timestamp _NEWLINE
+
+pos: "pos=" INT
+state: "state=(" INT "," INT ")+" INT
+name_any: "name=" ANY
+name_roll: "name=" NAME "/" ROLL_TYPE
+timestamp.2: "timestamp=" DATE
+bool: "true" -> true
+    | "false" -> false
+
+ANY: /[^\n]+/
+NAME: /[^\/\n]+/
+ROLL_TYPE: WORD
+BOOL: "true" | "false"
+DATE: INT "-" INT "-" INT "T" INT ":" INT ":" INT ("." INT)? "Z"
+_NEWLINE: NEWLINE
+
+%import common.INT
+%import common.WS
+%import common.WORD
+%import common.NEWLINE
+%ignore " "

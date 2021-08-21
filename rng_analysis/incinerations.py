@@ -1,47 +1,140 @@
 import json
-import time
 from functools import partial
 
-import matplotlib.pyplot as plt
+import matplotlib.cm
 import matplotlib.colors
 import matplotlib.patches
-import matplotlib.cm
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from blaseball_mike import chronicler
 from blaseball_mike.models import Stadium
 
+from rng_analysis.rng import Rng
 from rng_analysis.util import load_players_oldest_records
-from rng_matcher import rng_walker_for_birth, player_size_after_thwack
 
 HALL_BLUE = (89 / 255, 136 / 255, 255 / 255)
 
 
+def get_player_team(player_id, at_time):
+    for team in chronicler.get_entities('team', at=at_time):
+        if player_id in team['data']['lineup']:
+            return team['data']
+        elif player_id in team['data']['rotation']:
+            return team['data']
+
+    raise RuntimeError("Player not found")
+
+
+def roll_offsets(season, unstable):
+    gen_len = 26
+    if season > 1:
+        # cinnamon, fate, allergy, uhh
+        gen_len += 3
+    if season > 11:
+        # ritual, blood, coffee
+        gen_len += 3
+
+    if season < 6:
+        return {
+            'incin': -3,
+            'pitcher_or_batter': gen_len,
+            'position': gen_len + 1
+        }
+    elif season < 11:
+        if unstable:
+            return {
+                'chain': gen_len,
+                'incin': gen_len + 1,
+                'position': gen_len + 2,
+            }
+        else:
+            return {
+                'incin': gen_len,
+                'position': gen_len + 2,
+            }
+    elif season < 15:
+        return {
+            'incin': -4
+        }
+    else:
+        return {
+            'incin': -5
+        }
+
+
+highest_pitcher, lowest_batter = 0, 1
+
+
 def locate_incin(players, max_player_name_len, row):
+    global highest_pitcher, lowest_batter
+    if row['replacement id'] not in players:
+        return pd.Series([0, 0, 0, row['replacement id'], 0, 0, 0],
+                         index=['incin roll', 'incin roll location',
+                                'chain roll', 'replacement id',
+                                's0', 's1', 'offset'])
+
     replacement = players[row['replacement id']]
-
+    offsets = roll_offsets(row['season'], row['unstable'])
     # Compute data
-    walkers = list(rng_walker_for_birth(replacement))
+    rng = Rng((replacement['state']['s0'], replacement['state']['s1']),
+              replacement['state']['offset'])
 
-    gen_size = player_size_after_thwack(replacement)
-    expected_locs = [-5, -4, -3, gen_size, gen_size + 1]
-    incin_roll, incin_roll_loc = min(
-        min((walker[i], i) for i in expected_locs)
-        for walker in walkers)
-    synced = len(walkers) == 1
+    incin_roll_loc = offsets['incin']
+    incin_roll = rng[incin_roll_loc]
+
+    def query(offset_type):
+        if offset_type not in offsets:
+            return 0
+        return rng[offsets[offset_type]]
+
+    team = get_player_team(row['replacement id'], replacement['timestamp'])
+
+    # if row['season'] > 5:
+    #     print("highest pitcher", highest_pitcher,
+    #           "lowest batter", lowest_batter)
+
+    if 'pitcher_or_batter' in offsets:
+        if query('pitcher_or_batter') < 0.1:
+            pred_victim_id = team['rotation'][row['day'] % len(team['rotation'])]
+            highest_pitcher = max(query('pitcher_or_batter'), highest_pitcher)
+        else:
+            pred_victim_i = int(len(team['lineup']) * query('position'))
+            pred_victim_id = team['lineup'][pred_victim_i]
+            lowest_batter = min(query('pitcher_or_batter'), lowest_batter)
+    else:
+        index = int((len(team['lineup']) + 2) * query('position'))
+        if index == 0:
+            pred_victim_id = team['rotation'][row['day'] % len(team['rotation'])]
+        elif index == len(team['lineup']) + 1:
+            pred_victim_id = "<active>"
+        else:
+            pred_victim_id = team['lineup'][index - 1]
+
+    try:
+        pred_victim = players[pred_victim_id]
+        predicted_victim_name = pred_victim['name']
+    except KeyError:
+        predicted_victim_name = "?"
 
     # Format and print data
-    name = replacement['data']['name']
+    name = replacement['name']
     unstable = "(u)" if row['unstable'] else "   "
     spaces = " " * (max_player_name_len - len(name))
     season_day = f"s{row['season'] + 1}d{row['day'] + 1}"
-    inferred = "" if synced else " (inferred)"
-    print(f"{spaces}{name} {unstable} {season_day:<6} probable incin roll: "
-          f"{incin_roll:.10f} at thwack {incin_roll_loc}{inferred}")
+    inferred = " "  # if synced else "*"
+    print(f"{spaces}{name} {unstable} {season_day:<6}, "
+          f"{incin_roll:.7f} at thwack {incin_roll_loc}{inferred} "
+          f"predicted using position: {predicted_victim_name}")
 
-    return pd.Series([incin_roll, incin_roll_loc,
-                      synced, row['replacement id'], *walkers[0].state_at(0)],
-                     index=['incin roll', 'incin roll location',
-                            'synced', 'replacement id', 's0', 's1'])
+    chain_roll = query('chain') if 'chain' in offsets else -1
+
+    # Need to get thwack last so .get_state is in the right position
+    assert rng[0]
+    return pd.Series([incin_roll, incin_roll_loc, chain_roll,
+                      row['replacement id'], *rng.get_state()],
+                     index=['incin roll', 'incin roll location', 'chain roll',
+                            'replacement id', 's0', 's1', 'offset'])
 
 
 def seasonal_forts(season):
@@ -58,10 +151,9 @@ def main():
         incins_input = pd.read_csv('incinerations_v2.csv')
 
         players_oldest = load_players_oldest_records(exclude_initial=False)
-        players = {player['entityId']: player for player in players_oldest}
+        players = {player['id']: player for player in players_oldest}
 
-        max_player_name_len = max(
-            len(p['data']['name']) for p in players_oldest)
+        max_player_name_len = max(len(p['name']) for p in players_oldest if p['name'] is not None)
 
         func = partial(locate_incin, players, max_player_name_len)
         derived_data = incins_input.apply(func=func, axis=1)
@@ -79,6 +171,33 @@ def main():
     observed_unstable = [r['death rate']['unstable'][1][0] / 100000
                          for r in observed_rates if r['season'] != 'aggregate']
 
+    ee = incins
+    ee = ee[~ee['unstable']]
+    ee = ee[ee['incin roll'] != 0]
+
+    thresholds = 0.0001 + (1 - ee['fortification']) * 0.0003
+    thresholds[ee['season'] == 1] = 0.000075
+    thresholds[ee['season'] == 2] = 0.0005
+    thresholds[ee['season'] == 3] = 0.00015
+    thresholds[ee['season'] == 4] = 0.00015
+    thresholds[ee['season'] == 5] = 0.00015
+    thresholds[ee['season'] == 6] = float('nan')
+    thresholds[ee['season'] == 7] = 0.00025
+    thresholds[ee['season'] == 8] = 0.00025
+    thresholds[ee['season'] == 9] = 0.00025
+
+    closeness = ee['incin roll'] / thresholds
+
+    fig, ax = plt.subplots(1)
+    ax.set_yscale('log')
+    ax.scatter(ee['day'], closeness, c=ee['season'])
+    ax.set_xlabel("Day")
+    ax.set_ylabel("Degree of failure")
+    ax.set_title("How bad did you fail your incin roll")
+
+    fig.tight_layout()
+    plt.show()
+
     fig, (stable_ax, unstable_ax) = plt.subplots(2, figsize=(12, 8),
                                                  constrained_layout=True)
     fig.set_constrained_layout_pads(w_pad=12. / 72., h_pad=24. / 72.,
@@ -88,6 +207,7 @@ def main():
         ax.set_ylabel("Season")
         ax.set_yticks(np.arange(24) + 1)
 
+        # Create the even-odd shading
         yticks = ax.get_yticks()
         for y0, y1 in zip(yticks[::2], yticks[1::2]):
             ax.axhspan(y0 - 0.5, y1 - 0.5, color='black', alpha=0.1, zorder=0)
@@ -95,28 +215,13 @@ def main():
     stable_incins = incins[~incins['unstable']]
     unstable_incins = incins[incins['unstable']]
 
-    theorized_base_rate = [
-        None,  # s1
-        0.000075,  # s2 -- low rate, but all eclipse
-        0.0005,  # s3 -- was 0.001 until day 6
-        0.00015,  # s4 -- moderate
-        0.00015,  # s5
-        0.00015,  # s6
-        None,  # s7 -- not comfortable calling this on so little data
-        0.00025,  # s8
-        0.00025,  # s9
-        0.00025,  # s10
-        None,  # s11 -- no eclipses
-    ]
-    theorized_unstable_multiplier = 40
-
     def add_threshold(start_season, threshold, alpha=0.015,
                       seasons=1, threshold_start=0.0):
         for season in range(start_season, start_season + seasons):
             forts = seasonal_forts(season)
             min_fort_i = min((f, i) for i, f in enumerate(forts))[1]
             for i, fort in enumerate(forts):
-                t = threshold * (40/25 - fort * 30/25)
+                t = threshold * (40 / 25 - fort * 30 / 25)
                 patch = matplotlib.patches.Rectangle(
                     (threshold_start, season - 0.5), t - threshold_start,
                     1, facecolor=(*HALL_BLUE, alpha),

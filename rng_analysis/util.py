@@ -1,5 +1,4 @@
 import json
-from typing import List
 
 import requests
 
@@ -13,18 +12,8 @@ def player_oldest_record(player):
 
 
 def load_players_oldest_records(exclude_initial=False):
-    try:
-        with open('players_baby_grand_oldest.json', 'r') as f:
-            players_oldest = json.load(f)
-    except FileNotFoundError:
-        with open('players_baby_grand.json', 'r') as f:
-            players: List[dict] = json.load(f)['items']
-
-        players_oldest = [player_oldest_record(p) for p in players]
-        players_oldest.sort(key=lambda item: item['validFrom'])
-
-        with open('players_baby_grand_oldest.json', 'w') as f:
-            json.dump(players_oldest, f)
+    with open('all_players.json', 'r') as f:
+        players_oldest = json.load(f)
 
     if exclude_initial:
         return [p for p in players_oldest if

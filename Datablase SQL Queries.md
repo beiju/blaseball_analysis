@@ -685,3 +685,15 @@ left join data.players on stats.pitcher_id=players.player_id and players.valid_u
 where outs > 0
 
 ```
+
+season starts and ends
+```postgresql
+select 
+	season,
+	min(perceived_at) as start, 
+	max(perceived_at) as end,
+	(case when day < 99 then 'season' else 'postseason' end) as type
+from data.game_events
+where tournament=-1
+group by season, day < 99
+```

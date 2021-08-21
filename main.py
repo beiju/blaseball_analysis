@@ -102,6 +102,7 @@ class GameState(object):
     number_of_bases = 4  # Someone can update this for fifth base if they want
 
     def __init__(self, optimistic=True):
+        self.quiet = True
         self.optimistic = optimistic
         
         self.inning = 0
@@ -129,17 +130,21 @@ class GameState(object):
         self.player_id_to_name = {}
         self.baserunners_prev = []
 
+    def print(self, *args, **kwargs):
+        if not self.quiet:
+            print(*args, **kwargs)
+
     def consume(self, update):
         self.home_team = update['homeTeam']
         self.away_team = update['awayTeam']
         if update['phase'] == 0:
-            print("Game created")
+            self.print("Game created")
         elif update['phase'] == 1:
-            print("Game start")
+            self.print("Game start")
         elif update['phase'] == 2:
-            print("Inning start")
+            self.print("Inning start")
         elif update['phase'] == 5:
-            print("Batter up (pre-s10)")
+            self.print("Batter up (pre-s10)")
             self.consume_game_event(update)
         elif update['phase'] == 6:
             # Game event
@@ -147,11 +152,11 @@ class GameState(object):
         elif update['phase'] == 3:
             # Game event that ends the top half-inning
             self.consume_game_event(update)
-            print("Half-inning end", update['lastUpdate'])
+            self.print("Half-inning end", update['lastUpdate'])
             self.reset_half_inning()
         elif update['phase'] == 7:
             # Game event that ends the gameId. Don't process it because it breaks assertions
-            print("Half-inning end and gameId end", update['lastUpdate'])
+            self.print("Half-inning end and gameId end", update['lastUpdate'])
             assert self.runs_away == update['awayScore']
             assert self.runs_home == update['homeScore']
         else:
@@ -176,7 +181,7 @@ class GameState(object):
         global opponent_hits_onto_base, opponent_hits_into_fc, opponent_hits_into_hr, opponent_hits_into_outs
         global opponent_fouls, opponent_walks, opponent_strikeouts_swinging, opponent_strikeouts_looking
 
-        print(update['lastUpdate'])
+        self.print(update['lastUpdate'])
 
         # assert update['inning'] == self.inning
         # assert update['topOfInning'] == self.top_of_inning
@@ -191,17 +196,17 @@ class GameState(object):
         #     return
 
         if self.borrowed_time:
-            print("BORROWED TIME: ", end='')
+            self.print("BORROWED TIME: ", end='')
 
         if update['lastUpdate'].startswith("Top of "):
-            print("Half-inning start")
+            self.print("Half-inning start")
         elif update['lastUpdate'].startswith("Bottom of "):
-            print("Half-inning start")
+            self.print("Half-inning start")
         elif " batting for the " in update['lastUpdate']:
             self.current_batter = update['lastUpdate'][:update['lastUpdate'].index(" batting for the")]
             batter_id = update['awayBatter'] if update['topOfInning'] else update['homeBatter']
             self.player_id_to_name[batter_id] = self.current_batter
-            print("Batter up")
+            self.print("Batter up")
         elif update['lastUpdate'].startswith("Strike, "):
             self.strike(update)
         elif " hit a ground out to " in update['lastUpdate'] or " scores on the sacrifice." in update['lastUpdate']:
@@ -259,7 +264,7 @@ class GameState(object):
         elif "throws a Mild pitch!\nBall," in update['lastUpdate']:
             self.ball(update)
         elif " is Elsewhere.." in update['lastUpdate'] or " is Shelled and cannot escape " in update['lastUpdate']:
-            print("Player skip")
+            self.print("Player skip")
         elif update['lastUpdate'].endswith(" hits a grand slam!"):
             self.home_run(update)
         elif "They run to safety, resulting in an out." in update['lastUpdate']:
@@ -269,7 +274,7 @@ class GameState(object):
         elif " times to strike out willingly!" in update['lastUpdate']:  # Love blood
             self.out(update)
         elif any(event in update['lastUpdate'] for event in GameState.flavor_events) or re.match(r"^\d+ Birds$", update['lastUpdate']):
-            print("Flavor event")
+            self.print("Flavor event")
         else:
             raise RuntimeError("Unknown gameId update")
 
@@ -285,7 +290,7 @@ class GameState(object):
 
         away_str = "{0:.1f}".format(self.runs_away).rstrip('0').rstrip('.')
         home_str = "{0:.1f}".format(self.runs_home).rstrip('0').rstrip('.')
-        print(
+        self.print(
             f"{self.outs} outs, {self.strikes} strikes, {self.balls} balls, {sum(self.runners_on)} on, score {away_str}-{home_str}")
 
     def advance_half_inning(self):
@@ -298,7 +303,7 @@ class GameState(object):
         self.reset_half_inning()
 
     def strike(self, update):
-        print("Strike")
+        self.print("Strike")
         self.strikes += 1
 
         max_strikes = update['awayStrikes'] if update['topOfInning'] else update['homeStrikes']
@@ -320,9 +325,9 @@ class GameState(object):
 
     def out(self, update, num_out=1, without_reset=False):
         if without_reset:
-            print("Out (without ending the at-bat)")
+            self.print("Out (without ending the at-bat)")
         else:
-            print("Out")
+            self.print("Out")
 
         if out_without_reaching_re.search(update['lastUpdate']) is None:
             runners_out = out_at_base_re.findall(update['lastUpdate'])
@@ -376,7 +381,7 @@ class GameState(object):
             return False
 
     def foul(self, update):
-        print("Foul")
+        self.print("Foul")
         max_strikes = update['awayStrikes'] if update['topOfInning'] else update['homeStrikes']
         assert self.strikes <= max_strikes
 
@@ -384,7 +389,7 @@ class GameState(object):
             self.strike(update)
 
     def ball(self, update):
-        print("Ball")
+        self.print("Ball")
         self.balls += 1
 
         if 'awayBalls' in update:
@@ -404,11 +409,11 @@ class GameState(object):
             self.score_runs(runners_scored, update)
 
     def walk(self, update):
-        print("Simulating Walk as a Hit")
+        self.print("Simulating Walk as a Hit")
         self.hit(update)
 
     def home_run(self, update):
-        print("Home run")
+        self.print("Home run")
         runs_scored = 1  # Starts with 1 for the batter
         for i, runners in enumerate(self.runners_on):
             runs_scored += runners
@@ -461,11 +466,11 @@ class GameState(object):
         return result
 
     def hit(self, update):
-        print("Hit")
+        self.print("Hit")
 
         if self.borrowed_time:
             self.reached_on_borrowed_time.append(self.current_batter)
-            print(self.current_batter, "reached on borrowed time")
+            self.print(self.current_batter, "reached on borrowed time")
 
         runners_changed = self.move_runners(update)
 
@@ -497,7 +502,7 @@ class GameState(object):
         self.reached_on_borrowed_time = []
 
     def steal(self, update):
-        print("Steal")
+        self.print("Steal")
         runner_change = self.move_runners(update)
 
         # This won't be right with Fifth Base but eh
@@ -508,7 +513,7 @@ class GameState(object):
             assert runner_change == 0
 
     def caught_stealing(self, update):
-        print("Caught stealing")
+        self.print("Caught stealing")
         runner_change = self.move_runners(update)
         inning_ended = self.out(update, without_reset=True)
         assert inning_ended or runner_change == -1
@@ -608,15 +613,27 @@ def simulate_season():
                 crab_strikes_swinging += is_crab(e)
                 opponent_strikes_swinging += not is_crab(e)
 
+        last_event = events['data'][-1]['data']
+        home_away_crab = 'home' if last_event['homeTeam'] == CLAB else 'away'
+        home_away_opponent = 'home' if last_event['homeTeam'] != CLAB else 'away'
+        assert home_away_crab != home_away_opponent
+
         if optimist_state.is_clab_good(adjust_runs=True, adjust_runs_optimist=True):
             games_won_optimist += 1
         if optimist_state.is_clab_bad(adjust_runs=True, adjust_runs_optimist=True):
             games_lost_optimist += 1
-            
         if pessimist_state.is_clab_good(adjust_runs=True, adjust_runs_optimist=False):
             games_won_pessimist += 1
+            if last_event[home_away_crab + 'Score'] < last_event[
+                home_away_opponent + 'Score']:
+                print(f"With 4th strike: "
+                      f"{last_event[home_away_opponent + 'TeamNickname']}, "
+                      f"without fourth strike: Crabs")
         if pessimist_state.is_clab_bad(adjust_runs=True, adjust_runs_optimist=False):
             games_lost_pessimist += 1
+            if last_event[home_away_crab+'Score'] > last_event[home_away_opponent+'Score']:
+                print("With 4th strike: Crabs, without fourth strike:",
+                      last_event[home_away_opponent+'TeamNickname'])
 
         crab_score.append(optimist_state.crab_runs(adjust_runs=False))
         crab_score_adjusted_optimist.append(optimist_state.crab_runs(adjust_runs=True, adjust_runs_optimist=True))
@@ -641,6 +658,9 @@ def simulate_season():
                                 "time (i.e. overlap between the previous two categories)")
     print(recoverable_runs, "runs scored during borrowed time which could still have been scored later in the inning")
 
+    print("Run differential, actual:", sum(crab_score) - sum(opponent_score))
+    print("Run differential, optimist:", sum(crab_score_adjusted_optimist) - sum(opponent_score))
+    print("Run differential, pessimist:", sum(crab_score_adjusted_pessimist) - sum(opponent_score))
     plot(np.array(crab_score), np.array(crab_score_adjusted_optimist), np.array(crab_score_adjusted_pessimist),
          np.array(opponent_score))
 
@@ -667,10 +687,12 @@ def plot(crab_score, crab_score_adjusted, crab_score_adjusted_pessimist, opponen
     ax.bar(x, crab_score_adjusted_pessimist, width=0.4, align='edge', color='tab:red', edgecolor='tab:red')
     ax.bar(x, opponent_score, width=-0.4, align='edge', color=colors.to_rgba('tab:blue', 0.8), edgecolor='tab:blue')
     ax.legend(labels, loc="upper right")
-    ax.set_title("Crab")
+    ax.set_title("Crabs season 13 fourth strike comparison")
     ax.set_xlabel("Game")
     ax.set_ylabel("Score")
-    ax.set_xlim(0, 100)
+    margin = 0.3
+    ax.set_xlim(margin, 100 - margin)
+    ax.axhline(y=0, xmin=0, xmax=100)
     fig.tight_layout()
     plt.show()
 

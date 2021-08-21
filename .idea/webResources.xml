@@ -9,6 +9,11 @@
             <path value="file://$PROJECT_DIR$/data-s18-partial" />
             <path value="file://$PROJECT_DIR$/data-s10" />
             <path value="file://$PROJECT_DIR$/data-s18" />
+            <path value="file://$PROJECT_DIR$/correlations/data" />
+            <path value="file://$PROJECT_DIR$/hypotheticals/data" />
+            <path value="file://$PROJECT_DIR$/hypotheticals/data-s10" />
+            <path value="file://$PROJECT_DIR$/hypotheticals/data-s18" />
+            <path value="file://$PROJECT_DIR$/hypotheticals/data-s18-partial" />
           </resourceRoots>
         </entryData>
       </entry>

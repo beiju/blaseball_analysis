@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-import random
 
 from blaseball_mike.models import Player
 from requests import HTTPError

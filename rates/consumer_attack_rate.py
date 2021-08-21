@@ -143,12 +143,12 @@ def load_attack_rate():
 
 def get_updates_for_team():
     try:
-        with open('team_updates.json', 'r') as f:
+        with open('../team_updates.json', 'r') as f:
             updates_for_team = json.load(f)
     except FileNotFoundError:
         updates_for_team = load_updates_for_team(updates_for_team)
 
-        with open('team_updates.json', 'w') as f:
+        with open('../team_updates.json', 'w') as f:
             json.dump(updates_for_team, f)
     return updates_for_team
 

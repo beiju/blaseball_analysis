@@ -493,7 +493,7 @@ def map_times(seasons, times):
         plot_locs -= (season_break_duration - desired_duration) * gap_portion
 
         all_plot_locs[in_season] = plot_locs / ONE_HOUR
-        all_plot_seasons[in_season] = season
+        all_plot_seasons[in_season] = season + 1
 
     return all_plot_locs, all_plot_seasons
 
@@ -529,8 +529,11 @@ def main():
     plot_deploys(fig, deploys, seasons)
 
     # Reverse Y axis
-    fig.update_yaxes(autorange="reversed")
-    fig.update_layout(xaxis_showgrid=False, yaxis_showgrid=False)
+    fig.update_yaxes(autorange="reversed", title_text="Season",
+                     tick0=12, dtick=1)
+    fig.update_xaxes(title_text="Game-day-ish")
+    fig.update_layout(title="Thing Happen", legend_title="Things",
+                      xaxis_showgrid=False, yaxis_showgrid=False)
 
     fig.show()
 

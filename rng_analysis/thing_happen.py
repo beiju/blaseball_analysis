@@ -1,13 +1,11 @@
 import colorsys
-import math
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta, datetime, timezone
-from typing import Dict, List, Tuple, Callable, Any
+from typing import Dict, List, Tuple
 
 import matplotlib.colors as mpl_colors
 import matplotlib.pyplot as plt
-import memcache
 import mpld3
 from blaseball_mike import eventually
 from dateutil.parser import isoparse as parse_date
@@ -17,8 +15,10 @@ from memorised.decorators import memorise
 from mpld3.plugins import PluginBase, PointHTMLTooltip
 
 from rng_analysis.load_fragments import load_fragments, Fragment, RngEntry
-
 # Fix bug in someone else's code
+from rng_analysis.thing_happen_data import QUERY_BASE, mc, floor_dt, \
+    get_season_times
+
 PointHTMLTooltip.JAVASCRIPT = """
 mpld3.register_plugin("htmltooltip", HtmlTooltipPlugin);
 HtmlTooltipPlugin.prototype = Object.create(mpld3.Plugin.prototype);
@@ -143,22 +143,10 @@ RNG_EVENT_TYPES = [
     253,  # Tarot card changed. Necessary for building event tree
 ]
 
-QUERY_BASE = {
-    'sortby': '{id}',  # This needs to be a stable sort or it skips items
-    'sortorder': 'asc',
-    # Prehistory is back-dated to the 1980s, and Discipline has incomplete
-    # backfilled data. This filters out both.
-    'after': '2021-01-01T00:00:00+00:00'
-}
-
 FAR_FUTURE = datetime(year=3030, month=1, day=1, tzinfo=timezone.utc)
-DT_MIN = datetime.min.replace(tzinfo=timezone.utc)
-ONE_HOUR = timedelta(hours=1)
 
 # Need a custom client to tell memorise that I increased the memcache server's
 # max value size
-mc = memcache.Client(['localhost:11211'],
-                     server_max_value_length=32 * 1024 * 1024)
 
 FeedEvent = dict
 
@@ -190,12 +178,6 @@ class CustomCss(PluginBase):
 
 
 # https://stackoverflow.com/a/32657466
-def ceil_dt(dt, delta):
-    return DT_MIN + math.ceil((dt - DT_MIN) / delta) * delta
-
-
-def floor_dt(dt, delta):
-    return DT_MIN + math.floor((dt - DT_MIN) / delta) * delta
 
 
 def all_events_of_interest_gen():
@@ -262,118 +244,6 @@ def all_rng_relevant_events(cachebust):
     return all_parents
 
 
-def season_endpoint(day: int, event_types: List[int], min_or_max,
-                    round_func: Callable[[datetime, timedelta], datetime]) -> \
-        Dict[int, datetime]:
-    """
-    Find beginnings of seasons by querying Eventually for day 1 "Play Ball!"
-    events
-    :return:
-    """
-    print("Refreshing season_endpoint day", day)
-    q = {
-        # Sets sort order and filtering by date
-        **QUERY_BASE,
-        'type': "_or_".join(str(et) for et in event_types),
-        'day': str(day)
-    }
-    seasons = defaultdict(lambda: [])
-    for event in eventually.search(cache_time=None, limit=-1, query=q):
-        seasons[event['season']].append(
-            round_func(parse_date(event['created']), ONE_HOUR))
-
-    return {season: min_or_max(dates) for season, dates in seasons.items()}
-
-
-@memorise(mc)
-def get_season_starts():
-    return season_endpoint(0, [1], min, floor_dt)
-
-
-@memorise(mc)
-def get_season_ends():
-    return season_endpoint(98, [11, 250, 246], max, ceil_dt)
-
-
-@memorise(mc)
-def get_postseason_times(cachebust) -> \
-        Tuple[Dict[int, Tuple[datetime, datetime]],
-              Dict[int, Tuple[datetime, datetime]]]:
-    print("get_postseason_gaps cachebusted:", cachebust)
-    q = {
-        # Sets sort order and filtering by date
-        **QUERY_BASE,
-        'type': '1_or_11',
-        'day_min': '98',  # The server does strictly greater than
-    }
-    seasons: Any = defaultdict(lambda: defaultdict(lambda: [None, None]))
-    for event in eventually.search(cache_time=None, limit=-1, query=q):
-        season = event['season']
-        day = event['day']
-        t = {1: 0, 11: 1}[event['type']]
-        seasons[season][day][t] = parse_date(event['created'])
-
-    postseason_times = {}
-    postseason_gaps = {}
-    for season, days in seasons.items():
-        starts, ends = zip(*days.values())
-        postseason_times[season] = (
-            floor_dt(min(starts), ONE_HOUR),
-            ceil_dt(max(ends), ONE_HOUR)
-        )
-
-        gap_i = max(range(1, len(starts)),
-                    key=lambda i: starts[i] - ends[i - 1])
-        gap_len = starts[gap_i] - ends[gap_i - 1]
-        print(f"Season {season + 1} postseason gap is "
-              f"{gap_len.total_seconds() / (60 * 60):.1f} hours")
-
-        postseason_gaps[season] = (
-            ceil_dt(ends[gap_i - 1], ONE_HOUR),
-            floor_dt(starts[gap_i], ONE_HOUR)
-        )
-
-    return postseason_times, postseason_gaps
-
-
-def is_postseason_birth(event):
-    return "Postseason Birth" in event['description']
-
-
-def is_election(event):
-    desc: str = event['description']
-    return (desc.startswith("Decree Passed") or
-            desc.startswith("Blessing Won") or
-            desc.startswith("Will Received"))
-
-
-@memorise(mc)
-def find_times_by_event(events: List[dict], filter_func: Callable[[dict], bool],
-                        what: str) -> Dict[int, Tuple[datetime, datetime]]:
-    by_season = defaultdict(lambda: [])
-    for event in events:
-        if filter_func(event):
-            by_season[event['season']].append(event)
-
-    found_times = {}
-    for season, events in by_season.items():
-        dates = [event['created'] for event in events]
-        min_date = min(dates)
-        max_date = max(dates)
-
-        time_diff = max_date - min_date
-        if not time_diff < timedelta(seconds=60):
-            print(f"Warning: season {season + 1} {what} lasted "
-                  f"{time_diff.total_seconds() / 60:.2f} minutes. "
-                  f"Is this correct?")
-        # Falsehood alert. This breaks if a day 99 game ends within 30 seconds
-        # of wildcard selection.
-        found_times[season] = (min_date - timedelta(seconds=30),
-                               max_date + timedelta(seconds=30))
-
-    return found_times
-
-
 def is_rng_relevant(event):
     if event['metadata'] is None:
         return False
@@ -399,14 +269,10 @@ def is_rng_relevant(event):
     return False
 
 
-def get_events_grouped(fragments: List[Fragment]):
+@memorise(mc)
+def get_events_grouped() -> Tuple[EventGroups, List[Fragment]]:
+    fragments: List[Fragment] = load_fragments('data/all_stats8.txt')
     feed_events = all_rng_relevant_events(3)
-    season_starts = get_season_starts()
-    season_ends = get_season_ends()
-    wildcard_times = find_times_by_event(feed_events, is_postseason_birth,
-                                         "wildcard selection")
-    election_times = find_times_by_event(feed_events, is_election, "elections")
-    postseason_times, postseason_gaps = get_postseason_times(4)
 
     rng_entries = defaultdict(lambda: [])
     for fragment in fragments:
@@ -498,7 +364,7 @@ def get_events_grouped(fragments: List[Fragment]):
             print(f"Warning: Couldn't categorize "
                   f"\"{event['description']}\"")
 
-    return groups
+    return groups, fragments
 
 
 def total_hours(dt):
@@ -568,8 +434,30 @@ def adjust_lightness(color, amount=0.5):
 
 
 def main():
-    fragments: List[Fragment] = load_fragments('data/all_stats8.txt')
-    data: EventGroups = get_events_grouped(fragments)
+    seasons = get_season_times()
+
+    breakpoint()
+    # data, fragments = get_events_grouped()
+    #
+    # with open('data/deploys.txt', 'r') as f:
+    #     deploys = [parse_date(s.strip()) for s in f.readlines()]
+    #
+    # fig = go.Figure()
+    #
+    # fig.add_trace(go.Scatter(
+    #     x=[e.plot_hours for e in data.regular_season],
+    #     y=[e.feed_event['season'] for e in data.regular_season],
+    #     mode='markers',
+    #     marker={
+    #         'color': [line_color(e) for e in data.regular_season],
+    #     }
+    # ))
+    #
+    # fig.show()
+
+
+def main_mpld3():
+    data, fragments = get_events_grouped()
 
     fig, ax = plt.subplots(1, figsize=[15, 7.75])
 

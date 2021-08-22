@@ -52,16 +52,16 @@ class SeasonTimesDataRow:
     election_end: datetime
 
 
-def cache_dataframe(path_format: str):
+def cache_dataframe(path_format: str, save_kwargs, read_kwargs):
     def decorator_cache_dataframe(func):
         @functools.wraps(func)
         def wrapper_cache_dataframe(*args, **kwargs):
             path = path_format.format(*args, **kwargs)
             try:
-                result = pd.read_csv(path)
+                result = pd.read_csv(path, **read_kwargs)
             except FileNotFoundError:
                 result: pd.DataFrame = func(*args, **kwargs)
-                result.to_csv(path)
+                result.to_csv(path, **save_kwargs)
 
             return result
 
@@ -152,7 +152,18 @@ def get_day_map() -> Dict[int, Dict[int, Timespan]]:
     return day_map
 
 
-@cache_dataframe("data/season_times.csv")
+@cache_dataframe("data/season_times.csv",
+                 save_kwargs={'index': False},
+                 read_kwargs={
+                     'index_col': 'season',
+                     'parse_dates': ['season_start', 'season_end',
+                                     'wildcard_selection_start',
+                                     'wildcard_selection_end',
+                                     'postseason_start', 'postseason_end',
+                                     'postseason_gap_start',
+                                     'postseason_gap_end', 'election_start',
+                                     'election_end']
+                 })
 def get_season_times() -> pd.DataFrame:
     day_map = get_day_map()
 

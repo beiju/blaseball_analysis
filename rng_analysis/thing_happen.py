@@ -7,6 +7,8 @@ from typing import Dict, List, Tuple
 import matplotlib.colors as mpl_colors
 import matplotlib.pyplot as plt
 import mpld3
+import pandas as pd
+import plotly.graph_objects as go
 from blaseball_mike import eventually
 from dateutil.parser import isoparse as parse_date
 from matplotlib.collections import LineCollection
@@ -434,16 +436,15 @@ def adjust_lightness(color, amount=0.5):
 
 
 def main():
-    seasons = get_season_times()
+    seasons: pd.DataFrame = get_season_times()
 
-    breakpoint()
     # data, fragments = get_events_grouped()
     #
     # with open('data/deploys.txt', 'r') as f:
     #     deploys = [parse_date(s.strip()) for s in f.readlines()]
     #
-    # fig = go.Figure()
-    #
+    fig = go.Figure()
+
     # fig.add_trace(go.Scatter(
     #     x=[e.plot_hours for e in data.regular_season],
     #     y=[e.feed_event['season'] for e in data.regular_season],
@@ -452,8 +453,49 @@ def main():
     #         'color': [line_color(e) for e in data.regular_season],
     #     }
     # ))
-    #
-    # fig.show()
+
+    plot_game_lines(fig, seasons, 'season_start', 'season_end', 0)
+    plot_game_lines(fig, seasons[seasons.index < 23], 'postseason_start',
+                    'postseason_end', 110)
+
+    # Reverse Y axis
+    fig.update_yaxes(autorange="reversed")
+
+    fig.show()
+
+
+def plot_game_lines(fig, all_seasons, start_key, end_key, x_offset):
+    seasons = all_seasons[~all_seasons[start_key].isnull()]
+    # Use a scatter plot to fake line endcaps
+    fig.add_trace(go.Scatter(
+        x=x_offset + seasons.index * 0,
+        y=seasons.index,
+        mode='markers',
+        marker={'color': '#ccc'},
+        hoverinfo='skip',
+        showlegend=False,
+    ))
+    one_hour = pd.Timedelta(hours=1)
+    fig.add_trace(go.Scatter(
+        x=x_offset + (seasons[end_key] - seasons[start_key]) / one_hour,
+        y=seasons.index,
+        mode='markers',
+        marker={'color': '#ccc'},
+        hoverinfo='skip',
+        showlegend=False,
+    ))
+    for season, row in seasons.iterrows():
+        season_duration = row[end_key] - row[start_key]
+        fig.add_shape(
+            type='line',
+            xref='x', yref='y',
+            x0=x_offset, y0=season,
+            x1=x_offset + season_duration / one_hour, y1=season,
+            line={
+                'color': '#ccc',
+                'width': 6,
+            }
+        )
 
 
 def main_mpld3():

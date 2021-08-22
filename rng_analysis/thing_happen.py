@@ -1,9 +1,9 @@
-import asyncio
 import math
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta, datetime, timezone
-from typing import Dict, List, Union, Tuple, Callable, Any
+from itertools import groupby
+from typing import Dict, List, Tuple, Callable, Any, Generator
 
 import matplotlib.pyplot as plt
 import memcache
@@ -14,8 +14,8 @@ from blaseball_mike import eventually
 from dateutil.parser import isoparse as parse_date
 from matplotlib.collections import LineCollection
 from matplotlib.patheffects import Stroke
-from mpld3.plugins import Zoom, PointLabelTooltip, PluginBase
 from memorised.decorators import memorise
+from mpld3.plugins import Zoom, PointLabelTooltip, PluginBase, BoxZoom
 
 from rng_analysis.load_fragments import load_fragments
 
@@ -34,9 +34,12 @@ LABEL_NAMES = ["Deploy", "Player generation", "Party", "Party (LOTP)",
                "Party (Hotel Motel)", "Consumer attack", "LCD Soundsystem",
                "Recongealed differently", "Shadowed", "Night shift"]
 
+COLOR_MAP = {cat: color for cat, color in zip(CATEGORIES, CATEGORY_COLORS)}
+
 # https://www.blaseball.wiki/w/SIBR:Feed#Event_types
 # TODO Figure out what event the breach teams generation is associated with
 RNG_EVENT_TYPES = [
+    -1,  # Mysterious and vault-related. Necessary for building the tree
     24,  # Partying
     41,  # Feedback (relevant because of LCD Soundsystem)
     54,  # Incineration (successful only)
@@ -46,25 +49,61 @@ RNG_EVENT_TYPES = [
     61,  # Will received (used to detect elections, relevant for some)
     67,  # Consumer attack (including unsuccessful)
     84,  # Return from Elsewhere (relevant for "recongealed differently")
+    106,  # Mod Added
+    107,  # Mod removed -- comes along with Elsewhere
     109,  # Player added to team (incl. postseason births)
-    # 110,  # Necromancy (includes shadow boost)
-    116,  # Player incineration replacement (replace 54?)
-    # 117,  # Player stat increase (replaces 60-61?)
-    # 118,  # Player stat decrease (replaces 60-61?)
-    119,  # Player stat reroll (replaces 60-61?)
-
-    # 127,  # Player gained item (can this be used to detect item generation?)
+    110,  # Necromancy (includes shadow boost)
+    112,  # Player remove from team -- Ambush from dead team, Dust, etc
+    113,  # Player trade -- feedback, Will results
+    114,  # Player move within team -- Will results
+    115,  # Player add to team -- Roam, probably others
+    116,  # Player incineration replacement -- incins
+    117,  # Player stat increase
+    118,  # Player stat decrease
+    119,  # Player stat reroll
+    125,  # Player entered hall of flame (comes along with incinerations)
+    126,  # Player exited hall of flame
+    127,  # Player gained item (can this be used to detect item generation?)
+    128,  # Player dropped item, comes along with blessings
     133,  # Team incineration replacement (replace 54?)
+    136,  # Player hatched on newly created team (needed for incinerations)
+    137,  # Player hatched from Hall (needed for incinerations)
+    138,  # Team forms (needed for incinerations)
+    139,  # Player evolves (comes along with decrees, blessings)
+    144,  # Mod change (as in Reform)
     145,  # Player alternated (how is this different from 119?)
+    146,  # Mod added due to other mod. Necessary for building event tree
+    147,  # Mod removed due to other mod. Necessary for building event tree
+    149,  # Necromancy
+    151,  # Decree narration, needed for decrees
+    152,  # Will results (e.g. Foreshadow)
+    161,  # Gained blood type. Necessary for building event tree
     153,  # Team stat adjustment (todo random?)
+    166,  # Lineup sort. Necessary for building event tree
+    175,  # Detective activity. Necessary for building event tree
     # 177,  # Glitter crate drop (item generation)
     179,  # Single-attribute increase (may not be detectable)
     180,  # Single-attribute decrease (may not be detectable)
+    185,  # Item breaks (connected to consumer attacks)
+    186,  # Item damaged (connected to consumer attacks)
+    187,  # Broken item repaired. Necessary for building event tree
+    188,  # Damaged item repaired. Necessary for building event tree
     # 189,  # Community chest (many item generations)
+    190,  # No free item slot. Necessary for building event tree
+    191,  # Fax machine, gives shadow boosts
+    197,  # Player left the vault. Necessary for building event tree
+    199,  # Soul increase. Necessary for building event tree
+    203,  # Mod ratified. Necessary for building event tree
+    210,  # New league rule. Necessary for building event tree
+    217,  # Sun(Sun) pressure. Necessary for building event tree
+    223,  # Weather Event, generic I guess
+    224,  # Element added to item. Necessary for building event tree
+    228,  # Voicemail, gives shadow boosts
+    253,  # Tarot card changed. Necessary for building event tree
 ]
 
 QUERY_BASE = {
-    'sortby': '{created}',
+    'sortby': '{id}',  # This needs to be a stable sort or it skips items
     'sortorder': 'asc',
     # Prehistory is back-dated to the 1980s, and Discipline has incomplete
     # backfilled data. This filters out both.
@@ -80,13 +119,16 @@ ONE_HOUR = timedelta(hours=1)
 mc = memcache.Client(['localhost:11211'],
                      server_max_value_length=32 * 1024 * 1024)
 
+EventDict = dict
+EventGroup = Tuple[float, EventDict]
+
 
 @dataclass
 class EventGroups:
-    regular_season: List[dict]
-    wildcard_selection: List[dict]
-    postseason: List[dict]
-    election: List[dict]
+    regular_season: List[EventGroup]
+    wildcard_selection: List[EventGroup]
+    postseason: List[EventGroup]
+    election: List[EventGroup]
 
     regular_season_durations: Dict[int, Tuple[float, float]]
     postseason_durations: Dict[int, Tuple[float, float]]
@@ -128,18 +170,63 @@ def all_events_of_interest_gen():
         'type': "_or_".join(str(et) for et in RNG_EVENT_TYPES),
     }
 
+    fetched = 0
     for event in eventually.search(cache_time=None, limit=-1, query=q):
         event['created'] = parse_date(event['created'])
         yield event
 
+        fetched += 1
+        if fetched % 1000 == 0:
+            print("Fetched", fetched // 1000, "thousand events")
+
+
+def add_children_to(parent, all_children):
+    if parent['metadata'] is None or 'children' not in parent['metadata']:
+        return
+
+    for i, child_id in enumerate(parent['metadata']['children']):
+        try:
+            child = all_children.pop(child_id)
+        except KeyError:
+            # Incineration events have a runs child and I am not about to query
+            # all the runs
+            if parent['type'] == 54:
+                child = {'id': child_id}
+            else:
+                raise
+        else:
+            add_children_to(child, all_children)
+
+        parent['metadata']['children'][i] = child
+
 
 @memorise(mc)
 def all_events_of_interest():
-    print("Refreshing events")
     return list(all_events_of_interest_gen())
 
 
 @memorise(mc)
+def all_rng_relevant_events(cachebust):
+    print(cachebust)
+    all_children = {}
+    all_parents = []
+    for event in all_events_of_interest():
+        if (event['metadata'] is not None and 'parent' in event['metadata'] or
+                # Redacted events have none (useful) metadata so im just going
+                # to declare they're all children
+                event['type'] == -1):
+            all_children[event['id']] = event
+        else:
+            all_parents.append(event)
+
+    for parent in all_parents:
+        add_children_to(parent, all_children)
+
+    all_parents.sort(key=lambda e: e['created'])
+
+    return all_parents
+
+
 def season_endpoint(day: int, event_types: List[int], min_or_max,
                     round_func: Callable[[datetime, timedelta], datetime]) -> \
         Dict[int, datetime]:
@@ -161,6 +248,16 @@ def season_endpoint(day: int, event_types: List[int], min_or_max,
             round_func(parse_date(event['created']), ONE_HOUR))
 
     return {season: min_or_max(dates) for season, dates in seasons.items()}
+
+
+@memorise(mc)
+def get_season_starts():
+    return season_endpoint(0, [1], min, floor_dt)
+
+
+@memorise(mc)
+def get_season_ends():
+    return season_endpoint(98, [11, 250, 246], max, ceil_dt)
 
 
 @memorise(mc)
@@ -242,13 +339,35 @@ def find_times_by_event(events: List[dict], filter_func: Callable[[dict], bool],
     return found_times
 
 
-@memorise(mc)
-def get_events_grouped(cachebust):
-    print("get_events_grouped cachebusted: ", cachebust)
+def is_rng_relevant(event):
+    if event['metadata'] is None:
+        return False
 
-    all_events = all_events_of_interest()
-    season_starts = season_endpoint(0, [1], min, floor_dt)
-    season_ends = season_endpoint(98, [11, 250, 246], max, ceil_dt)
+    if 'children' not in event['metadata']:
+        return False
+
+    for child in event['metadata']['children']:
+        if 'type' not in child:
+            continue
+
+        if child['type'] not in {117, 118, 119, 137}:
+            continue
+
+        # The Chorby Soul filter
+        # I checked and as of when I checked this literally only finds chorby
+        d = child['metadata']
+        if child['type'] == 118 and abs(d['before'] - d['after']) < 0.0002:
+            continue
+
+        return True
+
+    return False
+
+
+def get_events_grouped():
+    all_events = all_rng_relevant_events(3)
+    season_starts = get_season_starts()
+    season_ends = get_season_ends()
     wildcard_times = find_times_by_event(all_events, is_postseason_birth,
                                          "wildcard selection")
     election_times = find_times_by_event(all_events, is_election, "elections")
@@ -270,8 +389,11 @@ def get_events_grouped(cachebust):
         groups.postseason_durations[season] = total_hours(duration)
 
     for event in all_events:
-        season = event['season']
+        if not is_rng_relevant(event):
+            continue
+
         event_time = event['created']
+        season = event['season']
 
         season_start = season_starts[season]
         season_end = season_ends[season]
@@ -307,18 +429,19 @@ def get_events_grouped(cachebust):
         else:
             plot_time = event_time - season_start
 
-        event['plotHours'] = total_hours(plot_time)
+        plotHours = total_hours(plot_time)
 
         if season_start <= event_time <= season_end:
-            groups.regular_season.append(event)
+            groups.regular_season.append((plotHours, event))
         elif wc_selection_start <= event_time <= wc_selection_end:
-            groups.wildcard_selection.append(event)
+            groups.wildcard_selection.append((plotHours, event))
         elif postseason_start <= event_time <= postseason_end:
-            groups.postseason.append(event)
+            groups.postseason.append((plotHours, event))
         elif election_start <= event_time <= election_end:
-            groups.election.append(event)
+            groups.election.append((plotHours, event))
         else:
-            print(f"Warning: Couldn't categorize \"{event['description']}\"")
+            print(f"Warning: Couldn't categorize "
+                  f"\"{event['description']}\"")
 
     return groups
 
@@ -327,8 +450,26 @@ def total_hours(dt):
     return dt.total_seconds() / (60 * 60)
 
 
+def event_color(event):
+    if event['type'] == 54:
+        return COLOR_MAP['thwack']
+    elif event['type'] == 24:
+        return COLOR_MAP['party']
+    elif event['type'] == 67:
+        return COLOR_MAP['consumers']
+    elif event['type'] == 84:
+        return COLOR_MAP['recongealed']
+    elif event['type'] == 191:  # Fax
+        return COLOR_MAP['shadow']
+    elif event['type'] == 41:  # Feedback
+        return COLOR_MAP['lcd']
+    elif event['type'] == 228:  # Voicemail
+        return COLOR_MAP['shadow']
+    breakpoint()
+
+
 def main():
-    data: EventGroups = get_events_grouped(6)
+    data: EventGroups = get_events_grouped()
 
     fig, ax = plt.subplots(1, figsize=[15, 7.75])
 
@@ -343,12 +484,13 @@ def main():
                                colors='#ccc',
                                path_effects=[Stroke(capstyle="round")])
         ax.add_collection(lines)
-        points = ax.scatter([e['plotHours'] + x_offset for e in to_plot],
-                            [-e['season'] for e in to_plot],
-                            c=[e['type'] for e in to_plot])
+        points = ax.scatter([hours + x_offset for hours, _ in to_plot],
+                            [-event['season'] for _, event in to_plot],
+                            edgecolors=[event_color(e) for _, e in to_plot],
+                            facecolors='none')
         all_points.append(points)
-        all_labels.append([f"Day {e['day'] + 1}: {e['description']}"
-                           for e in to_plot])
+        all_labels.append([f"Day {event['day'] + 1}: {event['description']}"
+                           for _, event in to_plot])
 
     plot_timeline(data.regular_season_durations, data.regular_season)
     plot_timeline(data.postseason_durations, data.postseason, x_offset=110)
@@ -450,7 +592,7 @@ async def main_old():
     ax.set_xlim(0)
     ax.grid(axis='y')
 
-    mpld3.plugins.connect(fig, Zoom())
+    mpld3.plugins.connect(fig, BoxZoom())
 
     fig.tight_layout()
     mpld3.show()

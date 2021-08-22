@@ -196,8 +196,8 @@ def get_season_times() -> pd.DataFrame:
 
             postseason_start = day_map[season][99].start
             postseason_end = day_map[season][last_game_day].end
-            postseason_gap_start = ceil_dt(starts[gap_i], ONE_HOUR)
-            postseason_gap_end = floor_dt(ends[gap_i - 1], ONE_HOUR)
+            postseason_gap_start = ceil_dt(ends[gap_i - 1], ONE_HOUR)
+            postseason_gap_end = floor_dt(starts[gap_i], ONE_HOUR)
 
         # Season 24 strikes again
         wildcard_times_season = wildcard_times.get(season, Timespan(None, None))

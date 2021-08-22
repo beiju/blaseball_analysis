@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple
 import matplotlib.colors as mpl_colors
 import matplotlib.pyplot as plt
 import mpld3
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from blaseball_mike import eventually
@@ -146,6 +147,8 @@ RNG_EVENT_TYPES = [
 ]
 
 FAR_FUTURE = datetime(year=3030, month=1, day=1, tzinfo=timezone.utc)
+MAX_TIME = pd.Timestamp.max.tz_localize('UTC')
+ONE_HOUR = pd.Timedelta(hours=1)
 
 # Need a custom client to tell memorise that I increased the memcache server's
 # max value size
@@ -435,8 +438,73 @@ def adjust_lightness(color, amount=0.5):
     return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
 
 
+def season_row_i_for_timestamp(interval, value):
+    try:
+        return interval.get_loc(value)
+    except KeyError:
+        return np.nan
+
+
+def map_times(seasons, times):
+    all_plot_locs = np.empty(len(times))
+    all_plot_locs[:] = np.nan
+    all_plot_seasons = np.empty(len(times))
+    all_plot_seasons[:] = np.nan
+
+    for season, row in seasons.iterrows():
+        in_season = ((row['season_start'] <= times) &
+                     (times < row['next_season_start']))
+
+        # Start with the time into this season
+        plot_locs = times[in_season] - row['season_start']
+
+        # If after postseason start, reset to start postseason graph at 110 hrs
+        in_postseason = times[in_season] >= row['postseason_start']
+        plot_locs[in_postseason] = (times[in_season][in_postseason] -
+                                    row['postseason_start'] +
+                                    timedelta(hours=110))
+
+        # Get what proportion of the postseason gap has passed
+        postseason_gap_duration = (row['postseason_gap_end'] -
+                                   row['postseason_gap_start'])
+        if not pd.isnull(postseason_gap_duration):
+            desired_duration = postseason_gap_duration - pd.Timedelta(hours=5)
+            gap_portion = np.clip(((times[in_season] -
+                                    row['postseason_gap_start'])
+                                   / postseason_gap_duration), 0, 1)
+            # Scale down postseason gap to the desired duration
+            plot_locs -= (postseason_gap_duration -
+                          desired_duration) * gap_portion
+
+        # Get what proportion of the season break has passed
+        season_break_duration = (row['next_season_start'] - row['election_end'])
+        desired_duration = pd.Timedelta(hours=5)
+        # Season 24
+        if not pd.isnull(season_break_duration):
+            gap_portion = np.clip(((times[in_season] - row['election_end'])
+                                   / season_break_duration), 0, 1)
+
+        else:
+            season_break_duration = (
+                    row['next_season_start'] - row['season_end'])
+            gap_portion = np.clip(((times[in_season] - row['season_end'])
+                                   / season_break_duration), 0, 1)
+        # Scale down season break to the desired duration
+        plot_locs -= (season_break_duration - desired_duration) * gap_portion
+
+        all_plot_locs[in_season] = plot_locs / ONE_HOUR
+        all_plot_seasons[in_season] = season
+
+    return all_plot_locs, all_plot_seasons
+
+
 def main():
     seasons: pd.DataFrame = get_season_times()
+    now_utc = pd.Timestamp.now(tz=seasons.iloc[0]['season_start'].tz)
+    seasons['next_season_start'] = seasons['season_start'].shift(
+        -1, fill_value=now_utc)
+    deploys = pd.read_csv('data/deploys.txt',
+                          names=['time'], parse_dates=['time'])
 
     # data, fragments = get_events_grouped()
     #
@@ -454,48 +522,60 @@ def main():
     #     }
     # ))
 
-    plot_game_lines(fig, seasons, 'season_start', 'season_end', 0)
-    plot_game_lines(fig, seasons[seasons.index < 23], 'postseason_start',
-                    'postseason_end', 110)
+    plot_game_lines(fig, seasons, 'season_start', 'season_end')
+    plot_game_lines(fig, seasons, 'postseason_start', 'postseason_gap_start')
+    plot_game_lines(fig, seasons, 'postseason_gap_end', 'postseason_end')
+
+    plot_deploys(fig, deploys, seasons)
 
     # Reverse Y axis
     fig.update_yaxes(autorange="reversed")
+    fig.update_layout(xaxis_showgrid=False, yaxis_showgrid=False)
 
     fig.show()
 
 
-def plot_game_lines(fig, all_seasons, start_key, end_key, x_offset):
-    seasons = all_seasons[~all_seasons[start_key].isnull()]
+def plot_deploys(fig, deploys, seasons):
+    x, y = map_times(seasons, deploys['time'])
+    fig.add_trace(go.Scatter(
+        x=x, y=y,
+        mode='markers',
+        marker={'color': '#000', 'symbol': 'diamond'},
+        text=["Deploy at " + t.isoformat() for t in deploys['time']],
+        name="Deploys",
+    ))
+
+
+def plot_game_lines(fig, seasons, from_key, to_key):
+    start_x, start_y = map_times(seasons, seasons[from_key])
+    end_x, end_y = map_times(seasons, seasons[to_key])
     # Use a scatter plot to fake line endcaps
     fig.add_trace(go.Scatter(
-        x=x_offset + seasons.index * 0,
-        y=seasons.index,
+        x=start_x, y=start_y,
         mode='markers',
         marker={'color': '#ccc'},
         hoverinfo='skip',
         showlegend=False,
     ))
-    one_hour = pd.Timedelta(hours=1)
     fig.add_trace(go.Scatter(
-        x=x_offset + (seasons[end_key] - seasons[start_key]) / one_hour,
-        y=seasons.index,
+        x=end_x, y=end_y,
         mode='markers',
         marker={'color': '#ccc'},
         hoverinfo='skip',
         showlegend=False,
     ))
-    for season, row in seasons.iterrows():
-        season_duration = row[end_key] - row[start_key]
-        fig.add_shape(
-            type='line',
-            xref='x', yref='y',
-            x0=x_offset, y0=season,
-            x1=x_offset + season_duration / one_hour, y1=season,
-            line={
-                'color': '#ccc',
-                'width': 6,
-            }
-        )
+    for x0, y0, x1, y1 in zip(start_x, start_y, end_x, end_y):
+        if not pd.isnull(x0) and not pd.isnull(x1):
+            fig.add_shape(
+                type='line',
+                xref='x', yref='y',
+                x0=x0, y0=y0, x1=x1, y1=y1,
+                layer='below',
+                line={
+                    'color': '#ccc',
+                    'width': 6,
+                }
+            )
 
 
 def main_mpld3():

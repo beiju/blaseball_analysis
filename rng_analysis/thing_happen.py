@@ -1,24 +1,66 @@
+import colorsys
 import math
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta, datetime, timezone
 from typing import Dict, List, Tuple, Callable, Any
 
+import matplotlib.colors as mpl_colors
 import matplotlib.pyplot as plt
 import memcache
 import mpld3
-import numpy as np
-import pandas as pd
 from blaseball_mike import eventually
 from dateutil.parser import isoparse as parse_date
 from matplotlib.collections import LineCollection
 from matplotlib.patheffects import Stroke
 from memorised.decorators import memorise
-from mpld3.plugins import Zoom, PointLabelTooltip, PluginBase, BoxZoom
+from mpld3.plugins import PluginBase, PointHTMLTooltip
 
 from rng_analysis.load_fragments import load_fragments, Fragment, RngEntry
 
-SEASON_TIME_URL = "https://api.sibr.dev/corsmechanics/time/season/"
+# Fix bug in someone else's code
+PointHTMLTooltip.JAVASCRIPT = """
+mpld3.register_plugin("htmltooltip", HtmlTooltipPlugin);
+HtmlTooltipPlugin.prototype = Object.create(mpld3.Plugin.prototype);
+HtmlTooltipPlugin.prototype.constructor = HtmlTooltipPlugin;
+HtmlTooltipPlugin.prototype.requiredProps = ["id"];
+HtmlTooltipPlugin.prototype.defaultProps = {labels:null,
+                                            target:null,
+                                            hoffset:0,
+                                            voffset:10,
+                                            targets:null};
+function HtmlTooltipPlugin(fig, props){
+    mpld3.Plugin.call(this, fig, props);
+};
+
+HtmlTooltipPlugin.prototype.draw = function(){
+    var obj = mpld3.get_element(this.props.id);
+    var labels = this.props.labels;
+    var targets = this.props.targets;
+    var tooltip = d3.select("body").append("div")
+        .attr("class", "mpld3-tooltip")
+        .style("position", "absolute")
+        .style("z-index", "10")
+        .style("visibility", "hidden");
+
+    obj.elements()
+        .on("mouseover", function(d, i){
+            tooltip.html(labels[i])
+                .style("visibility", "visible");
+        })
+        .on("mousemove", function(d, i){
+            tooltip
+            .style("top", d3.event.pageY + this.props.voffset + "px")
+            .style("left",d3.event.pageX + this.props.hoffset + "px");
+        }.bind(this))
+        .on("mousedown.callout", function(d, i){
+            if (targets[i]) window.open(targets[i],"_blank");
+        })
+        .on("mouseout", function(d, i){
+            tooltip.style("visibility", "hidden");
+        });
+};
+"""
 
 # Some false positives are included in the output. Exclude known ones.
 IGNORE_EVENTS = {
@@ -463,23 +505,27 @@ def total_hours(dt):
     return dt.total_seconds() / (60 * 60)
 
 
-def line_color(e: MergedEvent):
+def event_typename(e: MergedEvent):
     event = e.feed_event
     if event['type'] == 54:
-        return COLOR_MAP['thwack']
+        return 'thwack'
     elif event['type'] == 24:
-        return COLOR_MAP['party']
+        return 'party'
     elif event['type'] == 67:
-        return COLOR_MAP['consumers']
+        return 'consumers'
     elif event['type'] == 84:
-        return COLOR_MAP['recongealed']
+        return 'recongealed'
     elif event['type'] == 191:  # Fax
-        return COLOR_MAP['shadow']
+        return 'shadow'
     elif event['type'] == 41:  # Feedback
-        return COLOR_MAP['lcd']
+        return 'lcd'
     elif event['type'] == 228:  # Voicemail
-        return COLOR_MAP['shadow']
+        return 'shadow'
     breakpoint()
+
+
+def line_color(e: MergedEvent):
+    return COLOR_MAP[event_typename(e)]
 
 
 def face_color(e: MergedEvent):
@@ -487,6 +533,38 @@ def face_color(e: MergedEvent):
         return 0, 0, 0, 0
 
     return COLOR_MAP[e.rng_entry.type]
+
+
+def label_html(e):
+    localized_str = "Not (yet) localized"
+    if e.rng_entry is not None:
+        (s0, s1), offset = e.rng_entry.state
+        localized_str = f"Localized to ({s0},&#8203;{s1})+{offset}. " \
+                        f"Click to explore."
+
+    return f"""
+    <div class="tooltip tooltip-{event_typename(e)}">
+        <p>{e.feed_event['description']}</p>
+        <p>{localized_str}</p>
+    </div>
+    """
+
+
+def label_url(e):
+    if e.rng_entry is None:
+        return None
+
+    (s0, s1), offset = e.rng_entry.state
+    return f"https://rng.sibr.dev/?s0={s0}&s1={s1}&offset={offset}"
+
+
+def adjust_lightness(color, amount=0.5):
+    try:
+        c = mpl_colors.cnames[color]
+    except:
+        c = color
+    c = colorsys.rgb_to_hls(*mpl_colors.to_rgb(c))
+    return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
 
 
 def main():
@@ -497,6 +575,7 @@ def main():
 
     all_points = []
     all_labels = []
+    all_urls = []
 
     def plot_timeline(durations, to_plot, x_offset=0):
         # Plot season lines
@@ -511,9 +590,8 @@ def main():
                             edgecolors=[line_color(e) for e in to_plot],
                             facecolors=[face_color(e) for e in to_plot])
         all_points.append(points)
-        all_labels.append([f"Day {e.feed_event['day'] + 1}: "
-                           f"{e.feed_event['description']}"
-                           for e in to_plot])
+        all_labels.append([label_html(e) for e in to_plot])
+        all_urls.append([label_url(e) for e in to_plot])
 
     plot_timeline(data.regular_season_durations, data.regular_season)
     plot_timeline(data.postseason_durations, data.postseason, x_offset=110)
@@ -527,11 +605,29 @@ def main():
                         for season in data.regular_season_durations.keys()])
     fig.tight_layout()
 
+    classes = "\n".join(f""".tooltip-{typename} {{ background: rgb({
+    ','.join(str(c * 255) for c in adjust_lightness(color, 1.4 if typename != 'lcd' else 1))
+    }); }}"""
+                        for typename, color in COLOR_MAP.items())
+
     # Add mpld3 functionality
-    mpld3.plugins.connect(fig, Zoom())
+    # mpld3.plugins.connect(fig, Zoom())
     # noinspection PyTypeChecker
-    for points, labels in zip(all_points, all_labels):
-        mpld3.plugins.connect(fig, PointLabelTooltip(points, labels))
+    for points, labels, urls in zip(all_points, all_labels, all_urls):
+        mpld3.plugins.connect(fig, PointHTMLTooltip(points, labels, urls, css="""
+        .tooltip {
+            background-color: #ddd;
+            padding: 10px 12px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            box-shadow: 0px 2px 3px rgb(0 0 0 / 30%);
+            font-family: sans-serif;
+            max-width: 250px;
+        }
+        
+        .tooltip :first-child { margin-top: 0; }
+        .tooltip :last-child { margin-bottom: 0; }
+        """ + classes))
     mpld3.plugins.connect(fig, CustomCss(
         ".mpld3-paths { stroke-linecap: round; }"))
 

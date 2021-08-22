@@ -5,7 +5,7 @@ from dateutil.parser import parse as parse_date
 from lark import Lark, Transformer
 
 
-class Entry:
+class RngEntry:
     def __init__(self,
                  pos: int,
                  state: Tuple[Tuple[int, int], int],
@@ -22,8 +22,8 @@ class Entry:
 
 
 class Fragment:
-    def __init__(self, aligned: bool, anchors: List[Entry],
-                 events: List[Entry]):
+    def __init__(self, aligned: bool, anchors: List[RngEntry],
+                 events: List[RngEntry]):
         self.aligned = aligned
         self.anchors = anchors
         self.events = events
@@ -53,10 +53,10 @@ class FragmentsTransformer(Transformer):
         return node
 
     def anchor_entry(self, node):
-        return Entry(*node)
+        return RngEntry(*node)
 
     def event_entry(self, node):
-        return Entry(*node)
+        return RngEntry(*node)
 
     def pos(self, node):
         assert len(node) == 1

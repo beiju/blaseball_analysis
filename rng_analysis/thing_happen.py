@@ -2,8 +2,7 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta, datetime, timezone
-from itertools import groupby
-from typing import Dict, List, Tuple, Callable, Any, Generator
+from typing import Dict, List, Tuple, Callable, Any
 
 import matplotlib.pyplot as plt
 import memcache
@@ -17,7 +16,7 @@ from matplotlib.patheffects import Stroke
 from memorised.decorators import memorise
 from mpld3.plugins import Zoom, PointLabelTooltip, PluginBase, BoxZoom
 
-from rng_analysis.load_fragments import load_fragments
+from rng_analysis.load_fragments import load_fragments, Fragment, RngEntry
 
 SEASON_TIME_URL = "https://api.sibr.dev/corsmechanics/time/season/"
 
@@ -119,16 +118,22 @@ ONE_HOUR = timedelta(hours=1)
 mc = memcache.Client(['localhost:11211'],
                      server_max_value_length=32 * 1024 * 1024)
 
-EventDict = dict
-EventGroup = Tuple[float, EventDict]
+FeedEvent = dict
+
+
+@dataclass
+class MergedEvent:
+    feed_event: FeedEvent
+    rng_entry: RngEntry
+    plot_hours: float
 
 
 @dataclass
 class EventGroups:
-    regular_season: List[EventGroup]
-    wildcard_selection: List[EventGroup]
-    postseason: List[EventGroup]
-    election: List[EventGroup]
+    regular_season: List[MergedEvent]
+    wildcard_selection: List[MergedEvent]
+    postseason: List[MergedEvent]
+    election: List[MergedEvent]
 
     regular_season_durations: Dict[int, Tuple[float, float]]
     postseason_durations: Dict[int, Tuple[float, float]]
@@ -364,14 +369,21 @@ def is_rng_relevant(event):
     return False
 
 
-def get_events_grouped():
-    all_events = all_rng_relevant_events(3)
+def get_events_grouped(fragments: List[Fragment]):
+    feed_events = all_rng_relevant_events(3)
     season_starts = get_season_starts()
     season_ends = get_season_ends()
-    wildcard_times = find_times_by_event(all_events, is_postseason_birth,
+    wildcard_times = find_times_by_event(feed_events, is_postseason_birth,
                                          "wildcard selection")
-    election_times = find_times_by_event(all_events, is_election, "elections")
+    election_times = find_times_by_event(feed_events, is_election, "elections")
     postseason_times, postseason_gaps = get_postseason_times(4)
+
+    rng_entries = defaultdict(lambda: [])
+    for fragment in fragments:
+        for entry in fragment.events:
+            if entry.timestamp is not None:
+                timestamp = floor_dt(entry.timestamp, timedelta(seconds=1))
+                rng_entries[timestamp].append(entry)
 
     groups = EventGroups([], [], [], [], {}, {})
 
@@ -388,7 +400,7 @@ def get_events_grouped():
         duration = (end - start) - (gap_end - gap_start)
         groups.postseason_durations[season] = total_hours(duration)
 
-    for event in all_events:
+    for event in feed_events:
         if not is_rng_relevant(event):
             continue
 
@@ -431,14 +443,27 @@ def get_events_grouped():
 
         plotHours = total_hours(plot_time)
 
+        # Let's face it this is not the least efficient thing in this script.
+        # It's close though
+        rng_entry = None
+        for fragment in fragments:
+            for possible_rng_entry in fragment.events:
+                if (possible_rng_entry.timestamp is not None and
+                        abs(possible_rng_entry.timestamp -
+                            event['created']) < timedelta(seconds=10) and
+                        possible_rng_entry.name in event['description']):
+                    rng_entry = possible_rng_entry
+                    break
+
+        merged_event = MergedEvent(event, rng_entry, plotHours)
         if season_start <= event_time <= season_end:
-            groups.regular_season.append((plotHours, event))
+            groups.regular_season.append(merged_event)
         elif wc_selection_start <= event_time <= wc_selection_end:
-            groups.wildcard_selection.append((plotHours, event))
+            groups.wildcard_selection.append(merged_event)
         elif postseason_start <= event_time <= postseason_end:
-            groups.postseason.append((plotHours, event))
+            groups.postseason.append(merged_event)
         elif election_start <= event_time <= election_end:
-            groups.election.append((plotHours, event))
+            groups.election.append(merged_event)
         else:
             print(f"Warning: Couldn't categorize "
                   f"\"{event['description']}\"")
@@ -450,7 +475,8 @@ def total_hours(dt):
     return dt.total_seconds() / (60 * 60)
 
 
-def event_color(event):
+def line_color(e: MergedEvent):
+    event = e.feed_event
     if event['type'] == 54:
         return COLOR_MAP['thwack']
     elif event['type'] == 24:
@@ -468,8 +494,16 @@ def event_color(event):
     breakpoint()
 
 
+def face_color(e: MergedEvent):
+    if e.rng_entry is None:
+        return 0, 0, 0, 0
+
+    return COLOR_MAP[e.rng_entry.type]
+
+
 def main():
-    data: EventGroups = get_events_grouped()
+    fragments: List[Fragment] = load_fragments('data/all_stats8.txt')
+    data: EventGroups = get_events_grouped(fragments)
 
     fig, ax = plt.subplots(1, figsize=[15, 7.75])
 
@@ -484,13 +518,14 @@ def main():
                                colors='#ccc',
                                path_effects=[Stroke(capstyle="round")])
         ax.add_collection(lines)
-        points = ax.scatter([hours + x_offset for hours, _ in to_plot],
-                            [-event['season'] for _, event in to_plot],
-                            edgecolors=[event_color(e) for _, e in to_plot],
-                            facecolors='none')
+        points = ax.scatter([e.plot_hours + x_offset for e in to_plot],
+                            [-e.feed_event['season'] for e in to_plot],
+                            edgecolors=[line_color(e) for e in to_plot],
+                            facecolors=[face_color(e) for e in to_plot])
         all_points.append(points)
-        all_labels.append([f"Day {event['day'] + 1}: {event['description']}"
-                           for _, event in to_plot])
+        all_labels.append([f"Day {e.feed_event['day'] + 1}: "
+                           f"{e.feed_event['description']}"
+                           for e in to_plot])
 
     plot_timeline(data.regular_season_durations, data.regular_season)
     plot_timeline(data.postseason_durations, data.postseason, x_offset=110)

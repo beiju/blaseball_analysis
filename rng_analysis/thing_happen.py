@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from rng_analysis.load_fragments import RngEntry
-from rng_analysis.thing_happen_data import get_season_times, get_feed_events
+from rng_analysis.thing_happen_data import get_season_times, get_merged_events
 
 # Some false positives are included in the output. Exclude known ones.
 IGNORE_EVENTS = {
@@ -56,52 +56,6 @@ class EventGroups:
 
     regular_season_durations: Dict[int, Tuple[float, float]]
     postseason_durations: Dict[int, Tuple[float, float]]
-
-
-def event_typename(row: pd.Series):
-    if row['parent_event_type'] == 54:
-        # Incin
-        return 'thwack'
-    elif row['parent_event_type'] == 67:
-        return 'consumers'
-    elif row['parent_event_type'] == 84:
-        return 'recongealed'
-    elif row['parent_event_type'] == 41:
-        return 'lcd'
-    elif row['parent_event_type'] == 24:
-        return 'party'
-    elif "entered the Shadows" in row['description']:
-        return 'shadow'
-    elif ("is Infused" in row['description'] or
-          "is Outfused" in row['description']):
-        return 'infuse'
-    elif "was re-rolled" in row['description']:
-        return 'reroll'
-    elif ("was boosted" in row['description'] or
-          "were boosted" in row['description'] or
-          "was impaired" in row['description'] or
-          "Flotation Protocols Activated" in row['description']):
-        return 'boost'
-    elif "is Partying!" in row['description']:
-        # Parties from the shoe thieves' thing are in the Blessing type
-        return 'party'
-
-    raise ValueError("Unknown event type")
-
-
-def color_for_event(row: pd.Series):
-    return COLOR_MAP[event_typename(row)]
-
-
-def line_color(e: MergedEvent):
-    return COLOR_MAP[event_typename(e.feed_event['type'])]
-
-
-def face_color(e: MergedEvent):
-    if e.rng_entry is None:
-        return 0, 0, 0, 0
-
-    return COLOR_MAP[e.rng_entry.type]
 
 
 def label_html(e):
@@ -204,13 +158,8 @@ def main():
     deploys = pd.read_csv('data/deploys.txt',
                           names=['time'], parse_dates=['time'])
 
-    feed_events = get_feed_events()
+    merged_events: pd.DataFrame = get_merged_events()
 
-    # data, fragments = get_events_grouped()
-    #
-    # with open('data/deploys.txt', 'r') as f:
-    #     deploys = [parse_date(s.strip()) for s in f.readlines()]
-    #
     fig = go.Figure()
 
     plot_game_lines(fig, seasons, 'season_start', 'season_end')
@@ -219,7 +168,7 @@ def main():
 
     plot_deploys(fig, seasons, deploys)
 
-    plot_events(fig, seasons, feed_events)
+    plot_events(fig, seasons, merged_events)
 
     # Reverse Y axis
     fig.update_yaxes(autorange="reversed", title_text="Season",
@@ -234,17 +183,17 @@ def main():
 def plot_events(fig, seasons, feed_events):
     # In plotly to get every type to have a separate legend entry I have to
     # plot every type separately
-    event_types = feed_events.apply(event_typename, axis=1)
+    x, y = map_times(seasons, feed_events['timestamp_feed'])
+    for event_type in set(feed_events['type_feed']):
+        ind = feed_events['type_feed'] == event_type  # Indexer
 
-    x, y = map_times(seasons, feed_events['timestamp'])
-    for event_type in set(event_types):
-        # Indexer
-        ind = event_types == event_type
+        fill_color = np.where(feed_events[ind]['timestamp_rng'].isnull(),
+                              'rgba(0, 0, 0, 0)', COLOR_MAP[event_type])
         fig.add_trace(go.Scatter(
             x=x[ind], y=y[ind],
             mode='markers',
             marker={
-                'color': 'rgba(0, 0, 0, 0)',
+                'color': fill_color,
                 'line': {
                     'color': COLOR_MAP[event_type],
                     'width': 1

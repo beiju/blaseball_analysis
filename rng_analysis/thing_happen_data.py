@@ -5,9 +5,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from typing import List, Callable, Dict, Optional
 
+import numpy as np
 import pandas as pd
 from blaseball_mike import eventually
 from dateutil.parser import isoparse as parse_date
+
+from rng_analysis.load_fragments import load_fragments, RngEntry
 
 DT_MIN = datetime.min.replace(tzinfo=timezone.utc)
 ONE_HOUR = timedelta(hours=1)
@@ -127,6 +130,17 @@ class FeedEventsDataRow:
     parent_event_type: int
 
 
+@dataclass
+class RngEntriesDataRow:
+    fragment: int
+    timestamp: datetime
+    player_name: str
+    type: str
+    s0: int
+    s1: int
+    offset: int
+
+
 def cache_dataframe(path_format: str, save_kwargs=None, read_kwargs=None):
     if save_kwargs is None:
         save_kwargs = {}
@@ -142,6 +156,9 @@ def cache_dataframe(path_format: str, save_kwargs=None, read_kwargs=None):
             except FileNotFoundError:
                 result: pd.DataFrame = func(*args, **kwargs)
                 result.to_csv(path, **save_kwargs)
+                # Round-trip through save-read to ensure the value is the same
+                # on every call
+                result = pd.read_csv(path, **read_kwargs)
 
             return result
 
@@ -420,3 +437,95 @@ def get_feed_events() -> pd.DataFrame:
     rows.sort(key=lambda row: row.timestamp)
 
     return pd.DataFrame(rows)
+
+
+@cache_dataframe("data/rng_entries.csv",
+                 read_kwargs={
+                     'index_col': 0,
+                     'parse_dates': ['timestamp']
+                 })
+def get_rng_entries():
+    fragments = load_fragments('data/all_stats8.txt')
+
+    rows: List[RngEntriesDataRow] = []
+
+    for fragment_i, fragment in enumerate(fragments):
+        event: RngEntry
+        for event in fragment.events:
+            (s0, s1), offset = event.state
+            rows.append(RngEntriesDataRow(
+                fragment=fragment_i,
+                timestamp=event.timestamp,
+                player_name=event.name,
+                type=event.type,
+                s0=s0,
+                s1=s1,
+                offset=offset
+            ))
+
+    rows.sort(key=lambda row: row.timestamp)
+
+    return pd.DataFrame(rows)
+
+
+def event_typename(row: pd.Series):
+    if row['parent_event_type'] == 54:
+        # Incin
+        return 'thwack'
+    elif row['parent_event_type'] == 67:
+        return 'consumers'
+    elif row['parent_event_type'] == 84:
+        return 'recongealed'
+    elif row['parent_event_type'] == 41:
+        return 'lcd'
+    elif row['parent_event_type'] == 24:
+        return 'party'
+    elif "entered the Shadows" in row['description']:
+        return 'shadow'
+    elif ("is Infused" in row['description'] or
+          "is Outfused" in row['description']):
+        return 'infuse'
+    elif "was re-rolled" in row['description']:
+        return 'reroll'
+    elif ("was boosted" in row['description'] or
+          "were boosted" in row['description'] or
+          "was impaired" in row['description'] or
+          "Flotation Protocols Activated" in row['description']):
+        return 'boost'
+    elif "is Partying!" in row['description']:
+        # Parties from the shoe thieves' thing are in the Blessing type
+        return 'party'
+
+    raise ValueError("Unknown event type")
+
+
+@cache_dataframe("data/merged_entries.csv",
+                 read_kwargs={
+                     'index_col': 0,
+                     'parse_dates': ['timestamp_feed', 'timestamp_rng']
+                 })
+def get_merged_events():
+    feed_events = get_feed_events()
+    feed_events['type'] = feed_events.apply(event_typename, axis=1)
+    rng_entries = get_rng_entries()
+    time_threshold = pd.Timedelta(seconds=15)
+
+    def match_feed_event(feed_event):
+        type_matches = rng_entries['type'] == feed_event['type']
+        name_contained = rng_entries['player_name'].apply(
+            lambda s: s in feed_event['description'])
+        timestamp_close = rng_entries['timestamp'].apply(
+            lambda ts: abs(feed_event['timestamp'] - ts) < time_threshold)
+        matches = rng_entries[type_matches & name_contained & timestamp_close]
+        if len(matches) == 0:
+            return pd.Series([-1, np.nan, "", "", -1, -1, -1],
+                             index=rng_entries.columns)
+        elif len(matches) == 1:
+            return matches.iloc[0]
+        else:
+            raise RuntimeError("Multiple matches for feed event")
+
+    event_matches = feed_events.apply(match_feed_event, axis=1)
+    merged_events = feed_events.join(event_matches,
+                                     lsuffix='_feed', rsuffix='_rng')
+    return merged_events

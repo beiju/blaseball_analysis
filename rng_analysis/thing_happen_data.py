@@ -139,6 +139,7 @@ class RngEntriesDataRow:
     s0: int
     s1: int
     offset: int
+    is_aligned: bool
 
 
 def cache_dataframe(path_format: str, save_kwargs=None, read_kwargs=None):
@@ -460,7 +461,8 @@ def get_rng_entries():
                 type=event.type,
                 s0=s0,
                 s1=s1,
-                offset=offset
+                offset=offset,
+                is_aligned=fragment.aligned
             ))
 
     rows.sort(key=lambda row: row.timestamp)
@@ -508,7 +510,7 @@ def get_merged_events():
     feed_events = get_feed_events()
     feed_events['type'] = feed_events.apply(event_typename, axis=1)
     rng_entries = get_rng_entries()
-    time_threshold = pd.Timedelta(seconds=15)
+    time_threshold = pd.Timedelta(seconds=70)
 
     def match_feed_event(feed_event):
         type_matches = rng_entries['type'] == feed_event['type']
@@ -518,7 +520,7 @@ def get_merged_events():
             lambda ts: abs(feed_event['timestamp'] - ts) < time_threshold)
         matches = rng_entries[type_matches & name_contained & timestamp_close]
         if len(matches) == 0:
-            return pd.Series([-1, np.nan, "", "", -1, -1, -1],
+            return pd.Series([-1, np.nan, "", "", -1, -1, -1, False],
                              index=rng_entries.columns)
         elif len(matches) == 1:
             return matches.iloc[0]

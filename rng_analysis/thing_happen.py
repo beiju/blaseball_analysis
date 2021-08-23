@@ -187,8 +187,12 @@ def plot_events(fig, seasons, feed_events):
     for event_type in set(feed_events['type_feed']):
         ind = feed_events['type_feed'] == event_type  # Indexer
 
+        e = feed_events[ind]
         fill_color = np.where(feed_events[ind]['timestamp_rng'].isnull(),
                               'rgba(0, 0, 0, 0)', COLOR_MAP[event_type])
+
+        child_desc = e['description'].str.replace("\n", "<br />")
+        parent_desc = e['parent_description'].str.replace("\n", "<br />")
         fig.add_trace(go.Scatter(
             x=x[ind], y=y[ind],
             mode='markers',
@@ -199,8 +203,19 @@ def plot_events(fig, seasons, feed_events):
                     'width': 1
                 }
             },
-            text=feed_events['parent_description'][ind],
+            # Just one description if they're the same, both otherwise
+            text="<b>Season " + e['season'].astype(str) +
+                 " Day " + e['day'].astype(str) + "</b><br />" +
+                 np.where(child_desc == parent_desc, child_desc,
+                          parent_desc + "<br />" + child_desc) +
+                 "<br /><br />" +
+                 np.where(pd.isnull(e['timestamp_rng']), "Not (yet) localized",
+                          "Localized at (" + e['s0'].astype(str) + "," +
+                          e['s1'].astype(str) + ")+" + e['offset'].astype(str) +
+                          ".<br />Click to explore"),
             name=LABEL_MAP[event_type],
+            # This disables all the extra stuff plotly puts in the tooltips
+            hovertemplate="%{text}<extra></extra>",
         ))
 
 
@@ -212,6 +227,8 @@ def plot_deploys(fig, seasons, deploys):
         marker={'color': '#000', 'symbol': 'diamond'},
         text=["Deploy at " + t.isoformat() for t in deploys['time']],
         name="Deploys",
+        # This disables all the extra stuff plotly puts in the tooltips
+        hovertemplate="%{text}<extra></extra>",
     ))
 
 

@@ -5,10 +5,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from typing import List, Callable, Dict, Optional
 
-import memcache
 import pandas as pd
 from blaseball_mike import eventually
 from dateutil.parser import isoparse as parse_date
+
+DT_MIN = datetime.min.replace(tzinfo=timezone.utc)
+ONE_HOUR = timedelta(hours=1)
 
 QUERY_BASE = {
     # Data needs to be sorted by a unique key or else the paging skips items
@@ -17,10 +19,72 @@ QUERY_BASE = {
     # backfilled data. This filters out both.
     'after': '2021-01-01T00:00:00+00:00'
 }
-DT_MIN = datetime.min.replace(tzinfo=timezone.utc)
-ONE_HOUR = timedelta(hours=1)
-mc = memcache.Client(['localhost:11211'],
-                     server_max_value_length=32 * 1024 * 1024)
+
+# https://www.blaseball.wiki/w/SIBR:Feed#Event_types
+# TODO Figure out what event the breach teams generation is associated with
+RNG_EVENT_TYPES = [
+    -1,  # Mysterious and vault-related. Necessary for building the tree
+    24,  # Partying
+    41,  # Feedback (relevant because of LCD Soundsystem)
+    54,  # Incineration (successful only)
+    # 57,  # Renovation built (relevant for Wyatts, stadium stats changes)
+    59,  # Decree passed (used to detect elections, relevant for, e.g., Bats)
+    60,  # Blessing won (used to detect elections, relevant for some)
+    61,  # Will received (used to detect elections, relevant for some)
+    67,  # Consumer attack (including unsuccessful)
+    84,  # Return from Elsewhere (relevant for "recongealed differently")
+    106,  # Mod Added
+    107,  # Mod removed -- comes along with Elsewhere
+    109,  # Player added to team (incl. postseason births)
+    110,  # Necromancy (includes shadow boost)
+    112,  # Player remove from team -- Ambush from dead team, Dust, etc
+    113,  # Player trade -- feedback, Will results
+    114,  # Player move within team -- Will results
+    115,  # Player add to team -- Roam, probably others
+    116,  # Player incineration replacement -- incins
+    117,  # Player stat increase
+    118,  # Player stat decrease
+    119,  # Player stat reroll
+    125,  # Player entered hall of flame (comes along with incinerations)
+    126,  # Player exited hall of flame
+    127,  # Player gained item (can this be used to detect item generation?)
+    128,  # Player dropped item, comes along with blessings
+    133,  # Team incineration replacement (replace 54?)
+    136,  # Player hatched on newly created team (needed for incinerations)
+    137,  # Player hatched from Hall (needed for incinerations)
+    138,  # Team forms (needed for incinerations)
+    139,  # Player evolves (comes along with decrees, blessings)
+    144,  # Mod change (as in Reform)
+    145,  # Player alternated (how is this different from 119?)
+    146,  # Mod added due to other mod. Necessary for building event tree
+    147,  # Mod removed due to other mod. Necessary for building event tree
+    149,  # Necromancy
+    151,  # Decree narration, needed for decrees
+    152,  # Will results (e.g. Foreshadow)
+    161,  # Gained blood type. Necessary for building event tree
+    153,  # Team stat adjustment (todo random?)
+    166,  # Lineup sort. Necessary for building event tree
+    175,  # Detective activity. Necessary for building event tree
+    # 177,  # Glitter crate drop (item generation)
+    179,  # Single-attribute increase (may not be detectable)
+    180,  # Single-attribute decrease (may not be detectable)
+    185,  # Item breaks (connected to consumer attacks)
+    186,  # Item damaged (connected to consumer attacks)
+    187,  # Broken item repaired. Necessary for building event tree
+    188,  # Damaged item repaired. Necessary for building event tree
+    # 189,  # Community chest (many item generations)
+    190,  # No free item slot. Necessary for building event tree
+    191,  # Fax machine, gives shadow boosts
+    197,  # Player left the vault. Necessary for building event tree
+    199,  # Soul increase. Necessary for building event tree
+    203,  # Mod ratified. Necessary for building event tree
+    210,  # New league rule. Necessary for building event tree
+    217,  # Sun(Sun) pressure. Necessary for building event tree
+    223,  # Weather Event, generic I guess
+    224,  # Element added to item. Necessary for building event tree
+    228,  # Voicemail, gives shadow boosts
+    253,  # Tarot card changed. Necessary for building event tree
+]
 
 
 @dataclass
@@ -52,7 +116,23 @@ class SeasonTimesDataRow:
     election_end: datetime
 
 
-def cache_dataframe(path_format: str, save_kwargs, read_kwargs):
+@dataclass
+class FeedEventsDataRow:
+    season: int
+    day: int
+    timestamp: datetime
+    description: str
+    event_type: int
+    parent_description: str
+    parent_event_type: int
+
+
+def cache_dataframe(path_format: str, save_kwargs=None, read_kwargs=None):
+    if save_kwargs is None:
+        save_kwargs = {}
+    if read_kwargs is None:
+        read_kwargs = {}
+
     def decorator_cache_dataframe(func):
         @functools.wraps(func)
         def wrapper_cache_dataframe(*args, **kwargs):
@@ -70,10 +150,12 @@ def cache_dataframe(path_format: str, save_kwargs, read_kwargs):
     return decorator_cache_dataframe
 
 
+# Modified from https://stackoverflow.com/a/32657466
 def ceil_dt(dt, delta):
     return DT_MIN + math.ceil((dt - DT_MIN) / delta) * delta
 
 
+# Modified from https://stackoverflow.com/a/32657466
 def floor_dt(dt, delta):
     return DT_MIN + math.floor((dt - DT_MIN) / delta) * delta
 
@@ -218,5 +300,123 @@ def get_season_times() -> pd.DataFrame:
 
     # Not strictly necessary, but makes the CSV more intelligible
     rows.sort(key=lambda row: row.season)
+
+    return pd.DataFrame(rows)
+
+
+def get_relevant_events_raw():
+    q = {
+        # Sets sort order and filtering by date
+        **QUERY_BASE,
+        'type': "_or_".join(str(et) for et in RNG_EVENT_TYPES),
+    }
+
+    fetched = 0
+    for event in eventually.search(cache_time=None, limit=-1, query=q):
+        event['created'] = parse_date(event['created'])
+        yield event
+
+        fetched += 1
+        if fetched % 1000 == 0:
+            print("Fetched", fetched // 1000, "thousand events")
+
+
+def add_children_to(parent, all_children):
+    if parent['metadata'] is None or 'children' not in parent['metadata']:
+        return
+
+    for i, child_id in enumerate(parent['metadata']['children']):
+        try:
+            child = all_children.pop(child_id)
+        except KeyError:
+            # Incineration events have a runs child and I am not about to query
+            # all the runs
+            if parent['type'] == 54:
+                child = {'id': child_id}
+            else:
+                raise
+        else:
+            add_children_to(child, all_children)
+
+        parent['metadata']['children'][i] = child
+
+
+def get_relevant_event_trees():
+    all_children = {}
+    all_parents = []
+    for event in get_relevant_events_raw():
+        if (event['metadata'] is not None and 'parent' in event['metadata'] or
+                # Redacted events have none (useful) metadata so im just going
+                # to declare they're all children
+                event['type'] == -1):
+            all_children[event['id']] = event
+        else:
+            all_parents.append(event)
+
+    for parent in all_parents:
+        add_children_to(parent, all_children)
+
+    all_parents.sort(key=lambda e: e['created'])
+
+    return all_parents
+
+
+def get_relevant_children(event):
+    if event['metadata'] is None:
+        return False
+
+    if 'children' not in event['metadata']:
+        return False
+
+    for child in event['metadata']['children']:
+        if 'type' not in child:
+            continue
+
+        if child['type'] not in {117, 118, 119, 137}:
+            continue
+
+        # The Chorby Soul filter
+        # I checked and as of when I checked this literally only finds chorby
+        d = child['metadata']
+        if child['type'] == 118 and abs(d['before'] - d['after']) < 0.0002:
+            continue
+
+        if "Evolved to Base" in child['description']:
+            continue
+
+        # This is a mod addition, so shouldn't be in the stat increase category,
+        # but what are you gonna do
+        if "picked up Hitting intuitively" in child['description']:
+            continue
+
+        yield child
+
+
+@cache_dataframe("data/feed_events.csv",
+                 read_kwargs={
+                     'index_col': 0,
+                     'parse_dates': ['timestamp']
+                 })
+def get_feed_events() -> pd.DataFrame:
+    rows: List[FeedEventsDataRow] = []
+
+    for parent in get_relevant_event_trees():
+        for child in get_relevant_children(parent):
+            assert parent['season'] == child['season']
+            assert parent['day'] == child['day']
+            assert (parent['created'] - child['created']) < timedelta(seconds=5)
+
+            rows.append(FeedEventsDataRow(
+                season=child['season'],
+                day=child['day'],
+                timestamp=child['created'],
+                description=child['description'],
+                event_type=child['type'],
+                parent_description=parent['description'],
+                parent_event_type=parent['type'],
+            ))
+
+    # Not strictly necessary, but makes the CSV more intelligible
+    rows.sort(key=lambda row: row.timestamp)
 
     return pd.DataFrame(rows)

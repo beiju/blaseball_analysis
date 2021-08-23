@@ -147,9 +147,12 @@ def save_figure(fig):
     # Build HTML string
     html_str = f"""
     <html>
+    <head>
+        <title>Thing Happen</title>
+    </head>
     <body>
-    {plot_div}
-    {js_callback}
+        {plot_div}
+        {js_callback}
     </body>
     </html>
     """
@@ -184,7 +187,9 @@ def main():
                      tick0=12, dtick=1)
     fig.update_xaxes(title_text="Game-day-ish")
     fig.update_layout(title="Thing Happen", legend_title="Things",
-                      xaxis_showgrid=False, yaxis_showgrid=False)
+                      xaxis_showgrid=False, yaxis_showgrid=False,
+                      # Requires development version of plotly
+                      legend_groupclick='toggleitem')
 
     save_figure(fig)
 
@@ -192,50 +197,64 @@ def main():
 def plot_events(fig, seasons, feed_events):
     # In plotly to get every type to have a separate legend entry I have to
     # plot every type separately
-    x, y = map_times(seasons, feed_events['timestamp_feed'])
-    for event_type in set(feed_events['type_feed']):
-        ind = feed_events['type_feed'] == event_type  # Indexer
+    all_x, all_y = map_times(seasons, feed_events['timestamp_feed'])
+    for event_type in CATEGORIES:
+        of_type = feed_events['type_feed'] == event_type  # Indexer
+        is_localized = ~feed_events[of_type]['timestamp_rng'].isnull()
 
-        e = feed_events[ind]
-        fill_color = np.where(feed_events[ind]['timestamp_rng'].isnull(),
-                              'rgba(0, 0, 0, 0)', COLOR_MAP[event_type])
+        plot_some_events(fig, all_x[of_type][is_localized],
+                         all_y[of_type][is_localized],
+                         feed_events[of_type][is_localized],
+                         event_type, True, "Localized")
 
-        child_desc = e['description'].str.replace("\n", "<br />")
-        parent_desc = e['parent_description'].str.replace("\n", "<br />")
-        fig.add_trace(go.Scatter(
-            x=x[ind], y=y[ind],
-            mode='markers',
-            marker={
-                'color': fill_color,
-                'line': {
-                    'color': COLOR_MAP[event_type],
-                    'width': 1
-                }
-            },
-            # Just one description if they're the same, both otherwise
-            text="<b>Season " + e['season'].astype(str) +
-                 " Day " + e['day'].astype(str) + "</b><br />" +
-                 np.where(child_desc == parent_desc, child_desc,
-                          parent_desc + "<br />" + child_desc) +
-                 "<br /><br />" +
-                 np.where(pd.isnull(e['timestamp_rng']), "Not (yet) localized",
-                          "Localized at (" + e['s0'].astype(str) + "," +
-                          e['s1'].astype(str) + ")" +
-                          np.where(e['is_aligned'],
-                                   "+" + e['offset'].astype(str),
-                                   "<br /><i>Offset unknown</i>") +
-                          "<br />Click to explore"),
-            name=LABEL_MAP[event_type],
-            # This disables all the extra stuff plotly puts in the tooltips
-            hovertemplate="%{text}<extra></extra>",
-            # Link to Nominative Determinism explorer
-            customdata=np.where(pd.isnull(e['timestamp_rng']), "",
-                                "https://rng.sibr.dev/?s0=" +
-                                e['s0'].astype(str) + "&s1=" +
-                                e['s1'].astype(str) + "&offset=" +
-                                e['offset'].astype(str)),
+        plot_some_events(fig, all_x[of_type][~is_localized],
+                         all_y[of_type][~is_localized],
+                         feed_events[of_type][~is_localized],
+                         event_type, False, "Not localized")
 
-        ))
+
+def plot_some_events(fig, x, y, e, event_type, fill, legend_group):
+    child_desc = e['description'].str.replace("\n", "<br />")
+    parent_desc = e['parent_description'].str.replace("\n", "<br />")
+    fig.add_trace(go.Scatter(
+        x=x, y=y,
+        mode='markers',
+        marker={
+            'color': COLOR_MAP[event_type] if fill else 'rgba(0,0,0,0)',
+            'line': {
+                'color': COLOR_MAP[event_type],
+                'width': 1
+            }
+        },
+        legendgrouptitle={
+            'font': {'size': 13},
+            'text': legend_group,
+        },
+        legendgroup=legend_group,
+        # Just one description if they're the same, both otherwise
+        text="<b>Season " + e['season'].astype(str) +
+             " Day " + e['day'].astype(str) + "</b><br />" +
+             np.where(child_desc == parent_desc, child_desc,
+                      parent_desc + "<br />" + child_desc) +
+             "<br /><br />" +
+             np.where(pd.isnull(e['timestamp_rng']), "Not (yet) localized",
+                      "Localized at (" + e['s0'].astype(str) + "," +
+                      e['s1'].astype(str) + ")" +
+                      np.where(e['is_aligned'],
+                               "+" + e['offset'].astype(str),
+                               "<br /><i>Offset unknown</i>") +
+                      "<br />Click to explore"),
+        name=LABEL_MAP[event_type],
+        # This disables all the extra stuff plotly puts in the tooltips
+        hovertemplate="%{text}<extra></extra>",
+        # Link to Nominative Determinism explorer
+        customdata=np.where(pd.isnull(e['timestamp_rng']), "",
+                            "https://rng.sibr.dev/?s0=" +
+                            e['s0'].astype(str) + "&s1=" +
+                            e['s1'].astype(str) + "&offset=" +
+                            e['offset'].astype(str)),
+
+    ))
 
 
 def plot_deploys(fig, seasons, deploys):

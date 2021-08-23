@@ -1,12 +1,12 @@
-import colorsys
+import re
 from dataclasses import dataclass
 from datetime import timedelta, datetime, timezone
 from typing import Dict, List, Tuple
 
-import matplotlib.colors as mpl_colors
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.offline import plot
 
 from rng_analysis.load_fragments import RngEntry
 from rng_analysis.thing_happen_data import get_season_times, get_merged_events
@@ -56,38 +56,6 @@ class EventGroups:
 
     regular_season_durations: Dict[int, Tuple[float, float]]
     postseason_durations: Dict[int, Tuple[float, float]]
-
-
-def label_html(e):
-    localized_str = "Not (yet) localized"
-    if e.rng_entry is not None:
-        (s0, s1), offset = e.rng_entry.state
-        localized_str = f"Localized to ({s0},&#8203;{s1})+{offset}. " \
-                        f"Click to explore."
-
-    return f"""
-    <div class="tooltip tooltip-{event_typename(e)}">
-        <p>{e.feed_event['description']}</p>
-        <p>{localized_str}</p>
-    </div>
-    """
-
-
-def label_url(e):
-    if e.rng_entry is None:
-        return None
-
-    (s0, s1), offset = e.rng_entry.state
-    return f"https://rng.sibr.dev/?s0={s0}&s1={s1}&offset={offset}"
-
-
-def adjust_lightness(color, amount=0.5):
-    try:
-        c = mpl_colors.cnames[color]
-    except:
-        c = color
-    c = colorsys.rgb_to_hls(*mpl_colors.to_rgb(c))
-    return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
 
 
 def season_row_i_for_timestamp(interval, value):
@@ -150,6 +118,47 @@ def map_times(seasons, times):
     return all_plot_locs, all_plot_seasons
 
 
+def save_figure(fig):
+    # Method to add clickable links is taken directly from
+    # https://community.plotly.com/t/hyperlink-to-markers-on-map/17858/6
+
+    # Get HTML representation of plotly.js and this figure
+    plot_div = plot(fig, output_type='div', include_plotlyjs=True)
+
+    # Get id of html div element that looks like
+    # <div id="301d22ab-bfba-4621-8f5d-dc4fd855bb33" ... >
+    res = re.search('<div id="([^"]*)"', plot_div)
+    div_id = res.groups()[0]
+
+    # Build JavaScript callback for handling clicks
+    # and opening the URL in the trace's customdata
+    js_callback = f"""
+    <script>
+    var plot_element = document.getElementById("{div_id}");
+    plot_element.on('plotly_click', function(data){{
+        var point = data.points[0]
+        if (point && point.customdata) {{
+            window.open(point.customdata)
+        }}
+    }})
+    </script>
+    """
+
+    # Build HTML string
+    html_str = f"""
+    <html>
+    <body>
+    {plot_div}
+    {js_callback}
+    </body>
+    </html>
+    """
+
+    # Write out HTML file
+    with open('thing_happen_latest.html', 'w') as f:
+        f.write(html_str)
+
+
 def main():
     seasons: pd.DataFrame = get_season_times()
     now_utc = pd.Timestamp.now(tz=seasons.iloc[0]['season_start'].tz)
@@ -177,7 +186,7 @@ def main():
     fig.update_layout(title="Thing Happen", legend_title="Things",
                       xaxis_showgrid=False, yaxis_showgrid=False)
 
-    fig.show()
+    save_figure(fig)
 
 
 def plot_events(fig, seasons, feed_events):
@@ -211,11 +220,21 @@ def plot_events(fig, seasons, feed_events):
                  "<br /><br />" +
                  np.where(pd.isnull(e['timestamp_rng']), "Not (yet) localized",
                           "Localized at (" + e['s0'].astype(str) + "," +
-                          e['s1'].astype(str) + ")+" + e['offset'].astype(str) +
-                          ".<br />Click to explore"),
+                          e['s1'].astype(str) + ")" +
+                          np.where(e['is_aligned'],
+                                   "+" + e['offset'].astype(str),
+                                   "<br /><i>Offset unknown</i>") +
+                          "<br />Click to explore"),
             name=LABEL_MAP[event_type],
             # This disables all the extra stuff plotly puts in the tooltips
             hovertemplate="%{text}<extra></extra>",
+            # Link to Nominative Determinism explorer
+            customdata=np.where(pd.isnull(e['timestamp_rng']), "",
+                                "https://rng.sibr.dev/?s0=" +
+                                e['s0'].astype(str) + "&s1=" +
+                                e['s1'].astype(str) + "&offset=" +
+                                e['offset'].astype(str)),
+
         ))
 
 

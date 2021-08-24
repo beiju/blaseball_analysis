@@ -9,7 +9,8 @@ import plotly.graph_objects as go
 from plotly.offline import plot
 
 from rng_analysis.load_fragments import RngEntry
-from rng_analysis.thing_happen_data import get_season_times, get_merged_events
+from rng_analysis.thing_happen_data import get_season_times, get_merged_events, \
+    get_rng_entries
 
 # Some false positives are included in the output. Exclude known ones.
 IGNORE_EVENTS = {
@@ -20,7 +21,7 @@ CATEGORIES = ['thwack', 'party', 'lotp', 'hotelmotel', 'consumers', 'lcd',
               'tangled', 'recongealed', 'shadow', 'nightshift', 'infuse',
               'reroll', 'boost', 'alternate']
 CATEGORY_COLORS = ['#e41a1c', '#4daf4a', '#ff7f00', '#ffff33', '#377eb8',
-                   '#f781bf', '#deadbe', '#a65628', '#999999', '#984ea3',
+                   '#f781bf', '#deadbe', '#a65628', '#555', '#984ea3',
                    '#deadbe', '#deadbe', '#deadbe', '#deadbe']
 LABEL_NAMES = ["Player generation", "Party", "Party (LOTP)",
                "Party (Hotel Motel)", "Consumer attack", "LCD Soundsystem",
@@ -149,6 +150,11 @@ def save_figure(fig):
     <html>
     <head>
         <title>Thing Happen</title>
+        <style>
+            .shapelayer {{
+                stroke-linecap: round;
+            }}
+        </style>
     </head>
     <body>
         {plot_div}
@@ -171,6 +177,16 @@ def main():
                           names=['time'], parse_dates=['time'])
 
     merged_events: pd.DataFrame = get_merged_events()
+    # Uhh yeah just load it again
+    rng_entries: pd.DataFrame = get_rng_entries()
+    # I'll optimize this if I get more than one or two entries in it
+    for s0, s1 in IGNORE_EVENTS:
+        rng_entries = rng_entries[(rng_entries['s0'] != s0) &
+                                  (rng_entries['s1'] != s1)]
+    rng_entries.sort_values('timestamp', inplace=True, kind='stable')
+
+    fragment_bounds = rng_entries['timestamp'].groupby(
+        rng_entries['fragment'].diff().ne(0).cumsum())
 
     fig = go.Figure()
 
@@ -178,8 +194,9 @@ def main():
     plot_game_lines(fig, seasons, 'postseason_start', 'postseason_gap_start')
     plot_game_lines(fig, seasons, 'postseason_gap_end', 'postseason_end')
 
-    plot_deploys(fig, seasons, deploys)
+    plot_fragment_lines(fig, seasons, fragment_bounds)
 
+    plot_deploys(fig, seasons, deploys)
     plot_events(fig, seasons, merged_events)
 
     fig.update_layout(title="Thing Happen", legend_title="Things",
@@ -191,6 +208,42 @@ def main():
     fig.update_xaxes(title_text="Game-day-ish")
 
     save_figure(fig)
+
+
+def plot_fragment_lines(fig, seasons, fragment_bounds):
+    season_line = (seasons['season_start'], seasons['season_end'])
+    post1_line = (seasons['postseason_start'], seasons['postseason_gap_start'])
+    post2_line = (seasons['postseason_gap_end'], seasons['postseason_end'])
+    ind = (fragment_bounds.max() -
+           fragment_bounds.min()) > pd.Timedelta(minutes=10)
+    for fragment_min, fragment_max in zip(fragment_bounds.min()[ind],
+                                          fragment_bounds.max()[ind]):
+        # Plot the through line
+        (start_x,), (start_y,) = map_times(seasons, pd.Series([fragment_min]))
+        (end_x,), (end_y,) = map_times(seasons, pd.Series([fragment_max]))
+        if pd.isnull(start_x) or pd.isnull(start_y) or start_x >= end_x:
+            continue
+        fig.add_shape(
+            type='line', xref='x', yref='y',
+            x0=start_x, y0=start_y, x1=end_x, y1=end_y,
+            layer='below', line={'color': '#999', 'width': 2}
+        )
+
+        for line_start, line_end in (season_line, post1_line, post2_line):
+            season = int(end_y) - 1  # This is pretty bad programming
+            (seg_start_x,), (seg_start_y,) = map_times(
+                seasons, pd.Series([max(fragment_min, line_start[season])]))
+            (seg_end_x,), (seg_end_y,) = map_times(
+                seasons, pd.Series([min(fragment_max, line_end[season])]))
+
+            if (pd.isnull(seg_start_x) or pd.isnull(seg_start_y) or
+                    seg_start_x >= seg_end_x):
+                continue
+            fig.add_shape(
+                type='line', xref='x', yref='y',
+                x0=seg_start_x, y0=seg_start_y, x1=seg_end_x, y1=seg_end_y,
+                layer='below', line={'color': '#999', 'width': 6}
+            )
 
 
 def plot_events(fig, seasons, feed_events):
@@ -273,7 +326,7 @@ def plot_deploys(fig, seasons, deploys):
     fig.add_trace(go.Scatter(
         x=x, y=y,
         mode='markers',
-        marker={'color': '#000', 'symbol': 'diamond'},
+        marker={'color': '#000', 'symbol': 'diamond-tall', 'size': 8},
         text=["Deploy at " + t.isoformat() for t in deploys['time']],
         name="Deploys",
         # This disables all the extra stuff plotly puts in the tooltips
@@ -284,21 +337,6 @@ def plot_deploys(fig, seasons, deploys):
 def plot_game_lines(fig, seasons, from_key, to_key):
     start_x, start_y = map_times(seasons, seasons[from_key])
     end_x, end_y = map_times(seasons, seasons[to_key])
-    # Use a scatter plot to fake line endcaps
-    fig.add_trace(go.Scatter(
-        x=start_x, y=start_y,
-        mode='markers',
-        marker={'color': '#ccc'},
-        hoverinfo='skip',
-        showlegend=False,
-    ))
-    fig.add_trace(go.Scatter(
-        x=end_x, y=end_y,
-        mode='markers',
-        marker={'color': '#ccc'},
-        hoverinfo='skip',
-        showlegend=False,
-    ))
     for x0, y0, x1, y1 in zip(start_x, start_y, end_x, end_y):
         if not pd.isnull(x0) and not pd.isnull(x1):
             fig.add_shape(

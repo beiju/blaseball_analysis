@@ -633,7 +633,11 @@ def get_rng_entries():
 
 
 def event_typename(row: pd.Series):
-    if row['parent_event_type'] == 24:
+    if "entered the Shadows" in row['description']:
+        # Do shadows first because a lot of other events have a shadow boost as
+        # a side effect (even incinerations, thanks to Ambush)
+        return 'shadow'
+    elif row['parent_event_type'] == 24:
         return 'party'
     elif row['parent_event_type'] == 40:
         return 'tangled'
@@ -653,8 +657,6 @@ def event_typename(row: pd.Series):
         # Need to look for "clocked in" otherwise it thinks the shadow boost is
         # also a night shift
         return 'nightshift'
-    elif "entered the Shadows" in row['description']:
-        return 'shadow'
     elif "a Postseason Birth" in row['description']:
         return 'thwack'
     elif ("is Infused" in row['description'] or

@@ -3,12 +3,14 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
+from itertools import chain
 from typing import List, Callable, Dict, Optional
 
 import numpy as np
 import pandas as pd
 from blaseball_mike import eventually
 from dateutil.parser import isoparse as parse_date
+from tqdm import tqdm
 
 from rng_analysis.load_fragments import load_fragments, RngEntry
 
@@ -26,68 +28,15 @@ QUERY_BASE = {
 # https://www.blaseball.wiki/w/SIBR:Feed#Event_types
 # TODO Figure out what event the breach teams generation is associated with
 RNG_EVENT_TYPES = [
-    -1,  # Mysterious and vault-related. Necessary for building the tree
-    24,  # Partying
-    41,  # Feedback (relevant because of LCD Soundsystem)
-    54,  # Incineration (successful only)
-    # 57,  # Renovation built (relevant for Wyatts, stadium stats changes)
-    59,  # Decree passed (used to detect elections, relevant for, e.g., Bats)
-    60,  # Blessing won (used to detect elections, relevant for some)
-    61,  # Will received (used to detect elections, relevant for some)
-    67,  # Consumer attack (including unsuccessful)
-    84,  # Return from Elsewhere (relevant for "recongealed differently")
-    106,  # Mod Added
-    107,  # Mod removed -- comes along with Elsewhere
-    109,  # Player added to team (incl. postseason births)
-    110,  # Necromancy (includes shadow boost)
-    112,  # Player remove from team -- Ambush from dead team, Dust, etc
-    113,  # Player trade -- feedback, Will results
-    114,  # Player move within team -- Will results
-    115,  # Player add to team -- Roam, probably others
     116,  # Player incineration replacement -- incins
     117,  # Player stat increase
     118,  # Player stat decrease
     119,  # Player stat reroll
-    125,  # Player entered hall of flame (comes along with incinerations)
-    126,  # Player exited hall of flame
-    127,  # Player gained item (can this be used to detect item generation?)
-    128,  # Player dropped item, comes along with blessings
-    133,  # Team incineration replacement (replace 54?)
     136,  # Player hatched on newly created team (needed for incinerations)
-    137,  # Player hatched from Hall (needed for incinerations)
-    138,  # Team forms (needed for incinerations)
-    139,  # Player evolves (comes along with decrees, blessings)
-    144,  # Mod change (as in Reform)
     145,  # Player alternated (how is this different from 119?)
-    146,  # Mod added due to other mod. Necessary for building event tree
-    147,  # Mod removed due to other mod. Necessary for building event tree
-    149,  # Necromancy
-    151,  # Decree narration, needed for decrees
-    152,  # Will results (e.g. Foreshadow)
-    161,  # Gained blood type. Necessary for building event tree
-    153,  # Team stat adjustment (todo random?)
-    166,  # Lineup sort. Necessary for building event tree
-    175,  # Detective activity. Necessary for building event tree
-    # 177,  # Glitter crate drop (item generation)
-    179,  # Single-attribute increase (may not be detectable)
-    180,  # Single-attribute decrease (may not be detectable)
-    185,  # Item breaks (connected to consumer attacks)
-    186,  # Item damaged (connected to consumer attacks)
-    187,  # Broken item repaired. Necessary for building event tree
-    188,  # Damaged item repaired. Necessary for building event tree
-    # 189,  # Community chest (many item generations)
-    190,  # No free item slot. Necessary for building event tree
-    191,  # Fax machine, gives shadow boosts
-    197,  # Player left the vault. Necessary for building event tree
-    199,  # Soul increase. Necessary for building event tree
-    203,  # Mod ratified. Necessary for building event tree
-    210,  # New league rule. Necessary for building event tree
-    217,  # Sun(Sun) pressure. Necessary for building event tree
-    223,  # Weather Event, generic I guess
-    224,  # Element added to item. Necessary for building event tree
-    228,  # Voicemail, gives shadow boosts
-    253,  # Tarot card changed. Necessary for building event tree
 ]
+
+SHOE_THIEVES_ID = 'bfd38797-8404-4b38-8b82-341da28b1f83'
 
 
 @dataclass
@@ -322,92 +271,247 @@ def get_season_times() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def get_relevant_events_raw():
-    q = {
-        # Sets sort order and filtering by date
-        **QUERY_BASE,
-        'type': "_or_".join(str(et) for et in RNG_EVENT_TYPES),
-    }
-
-    fetched = 0
-    for event in eventually.search(cache_time=None, limit=-1, query=q):
+def query_eventually(query):
+    for event in eventually.search(cache_time=None, limit=-1,
+                                   query=dict(QUERY_BASE, **query)):
         event['created'] = parse_date(event['created'])
         yield event
 
-        fetched += 1
-        if fetched % 1000 == 0:
-            print("Fetched", fetched // 1000, "thousand events")
+
+def get_postseason_births():
+    return list(query_eventually({
+        'type': '109',
+        'description': 'earned a Postseason Birth',
+    }))
 
 
-def add_children_to(parent, all_children):
-    if parent['metadata'] is None or 'children' not in parent['metadata']:
-        return
-
-    for i, child_id in enumerate(parent['metadata']['children']):
-        try:
-            child = all_children.pop(child_id)
-        except KeyError:
-            # Incineration events have a runs child and I am not about to query
-            # all the runs
-            if parent['type'] == 54:
-                child = {'id': child_id}
-            else:
-                raise
-        else:
-            add_children_to(child, all_children)
-
-        parent['metadata']['children'][i] = child
+def get_roams():
+    return list(query_eventually({
+        'type': '115_or_109',
+        'description': 'roam',
+    }))
 
 
-def get_relevant_event_trees():
-    all_children = {}
-    all_parents = []
-    for event in get_relevant_events_raw():
-        if (event['metadata'] is not None and 'parent' in event['metadata'] or
-                # Redacted events have none (useful) metadata so im just going
-                # to declare they're all children
-                event['type'] == -1):
-            all_children[event['id']] = event
-        else:
-            all_parents.append(event)
-
-    for parent in all_parents:
-        add_children_to(parent, all_children)
-
-    all_parents.sort(key=lambda e: e['created'])
-
-    return all_parents
+def get_bottom_dwells():
+    return list(query_eventually({
+        'type': '117',
+        'description': 'Bottom Dwellers',
+    }))
 
 
-def get_relevant_children(event):
-    if event['metadata'] is None:
-        return False
+def get_team_formations():
+    return list(query_eventually({'type': 138}))
 
-    if 'children' not in event['metadata']:
-        return False
 
-    for child in event['metadata']['children']:
-        if 'type' not in child:
-            continue
+def get_tunes_for_psychoacoustics():
+    return list(query_eventually({
+        'type': 57,
+        'description': 'for PsychoAcoustics',
+    }))
 
-        if child['type'] not in {117, 118, 119, 137}:
-            continue
 
-        # The Chorby Soul filter
-        # I checked and as of when I checked this literally only finds chorby
-        d = child['metadata']
-        if child['type'] == 118 and abs(d['before'] - d['after']) < 0.0002:
-            continue
+def get_localizations():
+    return list(query_eventually({
+        'type': 109,
+        'description': 'Localized into the',
+    }))
 
-        if "Evolved to Base" in child['description']:
-            continue
 
-        # This is a mod addition, so shouldn't be in the stat increase category,
-        # but what are you gonna do
-        if "picked up Hitting intuitively" in child['description']:
-            continue
+def get_aboardings():
+    return list(query_eventually({
+        'type': 109,
+        'description': 'came aboard the',
+        'expand_parent': 'true'
+    }))
 
-        yield child
+
+def get_vault_leavings():
+    return list(query_eventually({
+        'type': 197
+    }))
+
+
+def get_odysseys():
+    players_q = {
+        'type': '106_or_107',
+        'metadata.mod': 'NEWADVENTURE',
+        # Override after so it picks up Parker
+        'after': '1700-01-01T01:01:01Z'
+    }
+
+    odyssey_players = defaultdict(lambda: Timespan(None, None))
+    for event in query_eventually(players_q):
+        if event['type'] == 106:  # Gained mod
+            odyssey_players[event['playerTags'][0]].start = event['created']
+        else:  # Lost mod
+            odyssey_players[event['playerTags'][0]].end = event['created']
+
+    odysseys = []
+    for player_id, timespan in odyssey_players.items():
+        odysseys.extend(query_eventually({
+            'type': '115_or_109_or_244',
+            'playerTags': player_id
+        }))
+
+    return odysseys
+
+
+def joined_team(event, send_or_receive):
+    if event['type'] == 115:
+        return event['metadata'][send_or_receive + 'TeamId']
+    elif event['type'] == 109 or event['type'] == 244:
+        return event['metadata']['teamId']
+
+    raise RuntimeError("Can't get joined team for event of type " +
+                       str(event['type']))
+
+
+def get_feed_event_parent(child, postseason_births, roams, dwells, formations,
+                          tunes, localizations, aboardings, vault_leavings,
+                          odysseys):
+    time_threshold = timedelta(seconds=5)
+    try:
+        parent = child['metadata']['parent']
+    except KeyError:
+        # There's a return in the else block so pass just saves indentation
+        pass
+    else:
+        parent['created'] = parse_date(parent['created'])
+        return parent
+
+    # Is this a postseason birth?
+    if child['type'] == 109 and "a Postseason Birth" in child['description']:
+        # These are one of the few events that are complete in their own right.
+        # Cheat slightly by returning the event as its own parent
+        return child
+
+    # Is this a shadow boost?
+    if child['type'] == 117 and "entered the Shadows" in child['description']:
+        # Is the boost from a postseason birth?
+        qualifying_births = [
+            birth for birth in postseason_births if
+            birth['playerTags'][0] == child['playerTags'][0] and
+            abs(birth['created'] - child['created']) < time_threshold]
+
+        if len(qualifying_births) == 1:
+            return qualifying_births[0]
+
+        # Is the boost from roaming directly into the shadows?
+        qualifying_roams = [
+            roam for roam in roams if
+            roam['playerTags'][0] == child['playerTags'][0] and
+            joined_team(roam, 'receive') == child['teamTags'][0] and
+            abs(roam['created'] - child['created']) < time_threshold]
+
+        if len(qualifying_roams) == 1:
+            return qualifying_roams[0]
+
+        # Is the boost from joining a team as it's formed?
+        qualifying_vault_leavings = [
+            formation for formation in formations if
+            formation['teamTags'][0] == child['teamTags'][0] and
+            abs(formation['created'] - child['created']) < time_threshold]
+
+        if len(qualifying_vault_leavings) == 1:
+            return qualifying_vault_leavings[0]
+
+        # Is the boost from leaving a team as it's disbanded?
+        qualifying_vault_leavings = [
+            vault_leaving for vault_leaving in vault_leavings if
+            vault_leaving['playerTags'][0] == child['playerTags'][0] and
+            abs(vault_leaving['created'] - child['created']) < time_threshold]
+
+        if len(qualifying_vault_leavings) == 1:
+            return qualifying_vault_leavings[0]
+
+    # Is this a good riddance party?
+    if (child['type'] == 117 and "is Partying!" in child['description'] and
+            child['teamTags'][0] == SHOE_THIEVES_ID):
+        qualifying_roams = [
+            roam for roam in roams if
+            joined_team(roam, 'send') == SHOE_THIEVES_ID and
+            abs(roam['created'] - child['created']) < time_threshold]
+
+        if len(qualifying_roams) == 1:
+            return qualifying_roams[0]
+
+    # The parent event for Bottom Dwellers is also returned by the child query,
+    # discard it.
+    if child['type'] == 117 and "are Bottom Dwellers" in child['description']:
+        return None
+
+    # Is this a generic boost?
+    if child['type'] == 117 and "was boosted." in child['description']:
+        # Was the boost from a Bottom Dwell?
+        qualifying_dwells = [
+            dwell for dwell in dwells if
+            dwell['teamTags'][0] == child['teamTags'][0] and
+            abs(dwell['created'] - child['created']) < time_threshold]
+
+        if len(qualifying_dwells) == 1:
+            return qualifying_dwells[0]
+
+        # Was the boost from On An Odyssey
+        qualifying_odysseys = [
+            odyssey for odyssey in odysseys if
+            child['playerTags'][0] in odyssey['playerTags'] and
+            joined_team(odyssey, 'receive') == child['teamTags'][0] and
+            abs(odyssey['created'] - child['created']) < time_threshold]
+
+        if len(qualifying_odysseys) == 1:
+            return qualifying_odysseys[0]
+
+    # Is this a Wyatt from building PsychoAcoustics??
+    if (child['type'] == 136 and
+            "was pulled through the Rift" in child['description']):
+        # This is a two-level one. You have to get to a localization by player
+        # id and then to a tune by team id
+        qualifying_localizations = [
+            localization for localization in localizations if
+            localization['playerTags'][0] == child['playerTags'][0] and
+            abs(localization['created'] - child['created']) < time_threshold]
+
+        if len(qualifying_localizations) == 1:
+            localization = qualifying_localizations[0]
+
+            qualifying_tunes = [
+                tune for tune in tunes if
+                tune['teamTags'][0] == localization['teamTags'][0] and
+                abs(tune['created'] - child['created']) < time_threshold]
+
+            if len(qualifying_tunes) == 1:
+                # I want all 3 descriptions, but I only support a parent-child
+                # hierarchy and not a 3-level one. Cheat by editing the text
+                # for the localization onto the tune
+                tune = qualifying_tunes[0]
+                tune['description'] = (tune['description'] + "\n" +
+                                       localization['description'])
+                return tune
+
+    if child['type'] == 136 and "joined the ILB" in child['description']:
+        # This is a weird one. It's been used for Uncle and Liquid, who were
+        # existing players outside the ILB who were added to a team by blessing,
+        # and for Magi Ruiz, who was totally new. I'm just going to exclude the
+        # detectives manually.
+        if child['playerTags'][0] in {'fedbceb8-e2aa-4868-ac35-74cd0445893f',
+                                      'd1a198d6-b05a-47cf-ab8e-39a6fa1ed831'}:
+            return None
+
+        qualifying_aboardings = [
+            aboarding for aboarding in aboardings if
+            aboarding['playerTags'][0] == child['playerTags'][0] and
+            abs(aboarding['created'] - child['created']) < time_threshold]
+
+        if len(qualifying_aboardings) == 1:
+            # It's another 3-level one. Cheat again like with Localization
+            aboarding = qualifying_aboardings[0]
+            aboarding['description'] = (
+                    aboarding['metadata']['parent']['description'] + "\n" +
+                    aboarding['description'])
+            return aboarding
+
+    raise RuntimeError("Event", child['id'], "had no parent. Type:",
+                       child['type'], "Description:", child['description'])
 
 
 @cache_dataframe("data/feed_events.csv",
@@ -416,23 +520,81 @@ def get_relevant_children(event):
                      'parse_dates': ['timestamp']
                  })
 def get_feed_events() -> pd.DataFrame:
+    postseason_births = get_postseason_births()
+    roams = get_roams()
+    dwells = get_bottom_dwells()
+    formations = get_team_formations()
+    tunes = get_tunes_for_psychoacoustics()
+    localizations = get_localizations()
+    aboardings = get_aboardings()
+    vault_leavings = get_vault_leavings()
+    odysseys = get_odysseys()
+    q = {
+        'type': '_or_'.join(str(t) for t in RNG_EVENT_TYPES),
+        'expand_parent': 'true',
+    }
     rows: List[FeedEventsDataRow] = []
 
-    for parent in get_relevant_event_trees():
-        for child in get_relevant_children(parent):
-            assert parent['season'] == child['season']
-            assert parent['day'] == child['day']
-            assert (parent['created'] - child['created']) < timedelta(seconds=5)
+    # Postseason births are both a parent type (for the shadow boost) and an
+    # event in their own right
+    for child in chain(query_eventually(q), postseason_births):
+        parent = get_feed_event_parent(child, postseason_births, roams, dwells,
+                                       formations, tunes, localizations,
+                                       aboardings, vault_leavings, odysseys)
 
-            rows.append(FeedEventsDataRow(
-                season=child['season'],
-                day=child['day'],
-                timestamp=child['created'],
-                description=child['description'],
-                event_type=child['type'],
-                parent_description=parent['description'],
-                parent_event_type=parent['type'],
-            ))
+        if parent is None:
+            continue
+
+        assert parent['season'] == child['season']
+        assert parent['day'] == child['day']
+        assert (parent['created'] - child['created']) < timedelta(seconds=5)
+
+        # The Chorby Soul filter
+        # I checked and as of when I checked this literally only finds chorby
+        d = child['metadata']
+        if child['type'] == 118 and abs(d['before'] - d['after']) < 0.0002:
+            continue
+
+        # Filter out events which give flat boosts
+        if parent['type'] == 51 or parent['type'] == 52:
+            # Blooddrain (51 is normal, 52 is siphon), flat 0.1
+            continue
+        elif parent['type'] == 47:
+            # Peanut, flat 0.2
+            continue
+        elif (parent['type'] == 59 and
+              parent['description'] == "Decree Passed: Based Evolution"):
+            # Evolved and was boosted to evolution floor, many flat 0.01s
+            continue
+        elif (parent['type'] == 60 and parent['description'].startswith(
+                "Blessing Won: Targeted Evolution")):
+            # Evolved and was boosted to evolution floor, many flat 0.01s
+            continue
+        elif (parent['type'] == 60 and parent['description'].startswith(
+                "Blessing Won: Shadow Evolution")):
+            # Evolved and was boosted to evolution floor, many flat 0.01s
+            continue
+        elif (parent['type'] == 176 and
+              parent['description'] == "BASED EVOLUTION"):
+            # Evolved and was boosted to evolution floor, many flat 0.01s
+            continue
+        elif parent['type'] == 30 or parent['type'] == 31:
+            # Compressed by gamma (30) or caught some rays (31), flat 0.01
+            continue
+        elif ("picked up Hitting intuitively" in child['description'] or
+              "picked up Pitching intuitively" in child['description']):
+            # Intuitive (I guessed at the Pitching message), flat 0.1
+            continue
+
+        rows.append(FeedEventsDataRow(
+            season=child['season'],
+            day=child['day'],
+            timestamp=child['created'],
+            description=child['description'],
+            event_type=child['type'],
+            parent_description=parent['description'],
+            parent_event_type=parent['type'],
+        ))
 
     # Not strictly necessary, but makes the CSV more intelligible
     rows.sort(key=lambda row: row.timestamp)
@@ -471,19 +633,30 @@ def get_rng_entries():
 
 
 def event_typename(row: pd.Series):
-    if row['parent_event_type'] == 54:
-        # Incin
+    if row['parent_event_type'] == 24:
+        return 'party'
+    elif row['parent_event_type'] == 40:
+        return 'tangled'
+    elif row['parent_event_type'] == 41:
+        return 'lcd'
+    elif row['parent_event_type'] == 54 or row['event_type'] == 136:
+        # 54 is incineration, 136 is the Magi Ruiz blessing
         return 'thwack'
     elif row['parent_event_type'] == 67:
         return 'consumers'
     elif row['parent_event_type'] == 84:
         return 'recongealed'
-    elif row['parent_event_type'] == 41:
-        return 'lcd'
-    elif row['parent_event_type'] == 24:
-        return 'party'
+    elif row['event_type'] == 145:
+        return 'alternate'
+    elif (row['parent_event_type'] == 252 and
+          "clocked in" in row['description']):
+        # Need to look for "clocked in" otherwise it thinks the shadow boost is
+        # also a night shift
+        return 'nightshift'
     elif "entered the Shadows" in row['description']:
         return 'shadow'
+    elif "a Postseason Birth" in row['description']:
+        return 'thwack'
     elif ("is Infused" in row['description'] or
           "is Outfused" in row['description']):
         return 'infuse'
@@ -512,22 +685,37 @@ def get_merged_events():
     rng_entries = get_rng_entries()
     time_threshold = pd.Timedelta(seconds=70)
 
+    rng_names_lower = rng_entries['player_name'].str.lower()
+
     def match_feed_event(feed_event):
         type_matches = rng_entries['type'] == feed_event['type']
-        name_contained = rng_entries['player_name'].apply(
-            lambda s: s in feed_event['description'])
+        # The space is because of Wyatts Mason nothing through XIII
+        name_contained = rng_names_lower.apply(
+            lambda s: s in feed_event['description'].lower())
         timestamp_close = rng_entries['timestamp'].apply(
             lambda ts: abs(feed_event['timestamp'] - ts) < time_threshold)
         matches = rng_entries[type_matches & name_contained & timestamp_close]
+
         if len(matches) == 0:
             return pd.Series([-1, np.nan, "", "", -1, -1, -1, False],
                              index=rng_entries.columns)
-        elif len(matches) == 1:
-            return matches.iloc[0]
-        else:
-            raise RuntimeError("Multiple matches for feed event")
 
-    event_matches = feed_events.apply(match_feed_event, axis=1)
+        # Temp hack until the rng entries get player ids. If it found multiple
+        # entries that match, check if it's because some players' names are
+        # substrings of other players' names.
+        longest_name_i = matches['player_name'].str.len().argmax()
+        longest_name = matches.iloc[longest_name_i]['player_name']
+        if all(i == longest_name_i or
+               (n in longest_name and n != longest_name)
+               for i, n in enumerate(matches['player_name'])):
+            # Then all other matches are a strict substring of the longest name,
+            # and it's safe to assume the longest name is correct
+            return matches.iloc[longest_name_i]
+
+        raise RuntimeError("Multiple matches for feed event")
+
+    tqdm.pandas()
+    event_matches = feed_events.progress_apply(match_feed_event, axis=1)
     merged_events = feed_events.join(event_matches,
                                      lsuffix='_feed', rsuffix='_rng')
     return merged_events

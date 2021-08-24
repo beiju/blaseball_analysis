@@ -17,15 +17,15 @@ IGNORE_EVENTS = {
 }
 
 CATEGORIES = ['thwack', 'party', 'lotp', 'hotelmotel', 'consumers', 'lcd',
-              'recongealed', 'shadow', 'nightshift', 'infuse', 'reroll',
-              'boost']
+              'tangled', 'recongealed', 'shadow', 'nightshift', 'infuse',
+              'reroll', 'boost', 'alternate']
 CATEGORY_COLORS = ['#e41a1c', '#4daf4a', '#ff7f00', '#ffff33', '#377eb8',
-                   '#f781bf', '#a65628', '#999999', '#984ea3', '#deadbe',
-                   '#deadbe', '#deadbe']
+                   '#f781bf', '#deadbe', '#a65628', '#999999', '#984ea3',
+                   '#deadbe', '#deadbe', '#deadbe', '#deadbe']
 LABEL_NAMES = ["Player generation", "Party", "Party (LOTP)",
                "Party (Hotel Motel)", "Consumer attack", "LCD Soundsystem",
-               "Recongealed differently", "Shadowed", "Night shift",
-               "Infusion", "Re-roll", "Boost"]
+               "Tangled", "Recongealed differently", "Shadowed", "Night shift",
+               "Infusion", "Re-roll", "Boost", "Alternated"]
 
 COLOR_MAP = {cat: color for cat, color in zip(CATEGORIES, CATEGORY_COLORS)}
 LABEL_MAP = {cat: label for cat, label in zip(CATEGORIES, LABEL_NAMES)}
@@ -182,14 +182,13 @@ def main():
 
     plot_events(fig, seasons, merged_events)
 
-    # Reverse Y axis
-    fig.update_yaxes(autorange="reversed", title_text="Season",
-                     tick0=12, dtick=1)
-    fig.update_xaxes(title_text="Game-day-ish")
     fig.update_layout(title="Thing Happen", legend_title="Things",
                       xaxis_showgrid=False, yaxis_showgrid=False,
                       # Requires development version of plotly
                       legend_groupclick='toggleitem')
+    fig.update_yaxes(autorange="reversed", title_text="Season",
+                     tick0=12, dtick=1)
+    fig.update_xaxes(title_text="Game-day-ish")
 
     save_figure(fig)
 
@@ -213,9 +212,32 @@ def plot_events(fig, seasons, feed_events):
                          event_type, False, "Not localized")
 
 
+def build_description_html(row):
+    child_desc = row['description'].replace("\n", "<br />")
+    parent_desc = row['parent_description'].replace("\n", "<br />")
+
+    if child_desc in parent_desc:
+        event_desc = parent_desc
+    else:
+        event_desc = parent_desc + "<br />" + child_desc
+
+    if pd.isnull(row['timestamp_rng']):
+        rng_desc = "Not (yet) localized"
+    else:
+        if row['is_aligned']:
+            align_desc = f"+{row['offset']}"
+        else:
+            align_desc = "<br /><i>Offset unknown</i>"
+        rng_desc = (f"Localized at ({row['s0']},{row['s1']}){align_desc}"
+                    f"<br />Click to explore")
+
+    return (f"<b>Season {row['season'] + 1} Day {row['day'] + 1}</b><br />"
+            f"{event_desc}<br /><br />"
+            f"{rng_desc}")
+
+
 def plot_some_events(fig, x, y, e, event_type, fill, legend_group):
-    child_desc = e['description'].str.replace("\n", "<br />")
-    parent_desc = e['parent_description'].str.replace("\n", "<br />")
+    descriptions = e.apply(build_description_html, axis=1)
     fig.add_trace(go.Scatter(
         x=x, y=y,
         mode='markers',
@@ -232,18 +254,7 @@ def plot_some_events(fig, x, y, e, event_type, fill, legend_group):
         },
         legendgroup=legend_group,
         # Just one description if they're the same, both otherwise
-        text="<b>Season " + e['season'].astype(str) +
-             " Day " + e['day'].astype(str) + "</b><br />" +
-             np.where(child_desc == parent_desc, child_desc,
-                      parent_desc + "<br />" + child_desc) +
-             "<br /><br />" +
-             np.where(pd.isnull(e['timestamp_rng']), "Not (yet) localized",
-                      "Localized at (" + e['s0'].astype(str) + "," +
-                      e['s1'].astype(str) + ")" +
-                      np.where(e['is_aligned'],
-                               "+" + e['offset'].astype(str),
-                               "<br /><i>Offset unknown</i>") +
-                      "<br />Click to explore"),
+        text=descriptions,
         name=LABEL_MAP[event_type],
         # This disables all the extra stuff plotly puts in the tooltips
         hovertemplate="%{text}<extra></extra>",

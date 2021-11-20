@@ -17,8 +17,8 @@ ground_friction_weight = .06
 
 
 def compare(player_id):
-    all_players = Player.load_all()
-    target_player = all_players[player_id]
+    all_players = Player.load_all_by_gameday(2, 99)
+    target_player = Player.load_by_gameday(player_id, 4, 5)
 
     def weighted_difference_wobabr(player):
         return (
@@ -50,24 +50,27 @@ def compare(player_id):
         )
 
     def buff():
-        return 0
+        return (0.15 + 0.3) / 2
 
     all_batters = (player for player in all_players.values()
-                   if is_league_player(player))
-    best_matches = sorted(all_batters, key=weighted_difference_erpr)
+                   )  # if is_league_player(player))
+    best_matches = sorted(all_batters, key=weighted_difference_wobabr)
 
     n_printed = 0
     for player in best_matches:
-        if player in player.league_team.rotation:
-            print(player.name, weighted_difference_erpr(player))
-            n_printed += 1
-            if n_printed > 10:
-                break
+        # if player in player.league_team.lineup:
+        name = player.name
+        if hasattr(player, 'state') and 'unscatteredName' in player.state:
+            name = player.state['unscatteredName']
+        print(name, weighted_difference_wobabr(player))
+        n_printed += 1
+        if n_printed > 10:
+            break
 
 
 def is_league_player(player):
     try:
-        return player.league_team and player in player.league_team.rotation
+        return player.league_team and player in player.league_team.lineup
     except (ValueError, HTTPError):
         return False
 

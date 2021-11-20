@@ -146,9 +146,9 @@ def seasonal_forts(season):
 
 def main():
     try:
-        incins = pd.read_csv('incinerations_with_rolls.csv')
+        incins = pd.read_csv('data/incinerations_with_rollsd.csv')
     except FileNotFoundError:
-        incins_input = pd.read_csv('incinerations_v2.csv')
+        incins_input = pd.read_csv('data/incinerations_v2.csv')
 
         players_oldest = load_players_oldest_records(exclude_initial=False)
         players = {player['id']: player for player in players_oldest}
@@ -161,7 +161,7 @@ def main():
         incins = incins_input.merge(derived_data, on='replacement id')
         incins.to_csv('incinerations_with_rolls.csv')
 
-    with open('observed_incin_rates.json', 'r') as f:
+    with open('data/observed_incin_rates.json', 'r') as f:
         observed_rates = json.load(f)
 
     observed_seasons = [r['season'] + 1 for r in observed_rates if

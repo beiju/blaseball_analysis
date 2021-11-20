@@ -1,0 +1,3077 @@
+{
+  "nextPage": "AAAAAAAAAAAAAAAAAAAAABrAXtn8hQEA",
+  "items": [
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "fb78e5ed-8e1d-d948-ed60-fcc8ca4c1504",
+      "validFrom": "2021-11-08T22:44:17.028589Z",
+      "validTo": "2021-11-08T22:45:01.005317Z",
+      "data": [
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "b4d03951-f583-4565-3cd6-0b0212988033",
+      "validFrom": "2021-11-08T22:45:01.005317Z",
+      "validTo": "2021-11-08T22:46:01.003741Z",
+      "data": [
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "4521db3b-db20-f8d9-00f3-b50c43d60b57",
+      "validFrom": "2021-11-08T22:46:01.003741Z",
+      "validTo": "2021-11-08T22:47:01.003613Z",
+      "data": [
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "533894eb-cb8f-e219-dd92-d1eb37f5a737",
+      "validFrom": "2021-11-08T22:47:01.003613Z",
+      "validTo": "2021-11-08T22:48:01.003593Z",
+      "data": [
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "4c8316af-ed9c-9e6b-0ffd-8e2cf868fd62",
+      "validFrom": "2021-11-08T22:48:01.003593Z",
+      "validTo": "2021-11-08T22:49:01.006588Z",
+      "data": [
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "e7f8ddd5-515c-314c-3495-240711aff5d2",
+      "validFrom": "2021-11-08T22:49:01.006588Z",
+      "validTo": "2021-11-08T22:50:01.001385Z",
+      "data": [
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "9b9dc4c1-7494-af9c-08d5-acacc77aecf5",
+      "validFrom": "2021-11-08T22:50:01.001385Z",
+      "validTo": "2021-11-08T22:51:01.003076Z",
+      "data": [
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "5c2cac36-4fce-4a47-71aa-ea0222324c32",
+      "validFrom": "2021-11-08T22:51:01.003076Z",
+      "validTo": "2021-11-08T22:52:01.006951Z",
+      "data": [
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "40ca6969-29a0-c2dd-95ec-d921441619d4",
+      "validFrom": "2021-11-08T22:52:01.006951Z",
+      "validTo": "2021-11-08T22:53:01.004053Z",
+      "data": [
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "1330bc2d-cb44-8039-382e-0de62da254b8",
+      "validFrom": "2021-11-08T22:53:01.004053Z",
+      "validTo": "2021-11-08T22:54:01.003555Z",
+      "data": [
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "e5b719c6-94a7-7f63-052c-953d2b4afc72",
+      "validFrom": "2021-11-08T22:54:01.003555Z",
+      "validTo": "2021-11-08T22:55:01.003734Z",
+      "data": [
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "4949de52-280e-9397-09b6-a2807a9c1602",
+      "validFrom": "2021-11-08T22:55:01.003734Z",
+      "validTo": "2021-11-08T22:56:01.019176Z",
+      "data": [
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "18c4a9f3-059a-3031-1c4c-863b36e06fbb",
+      "validFrom": "2021-11-08T22:56:01.019176Z",
+      "validTo": "2021-11-08T22:57:01.00313Z",
+      "data": [
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "6c3b7b2d-4c33-7c9e-db49-d2eb09eea2a4",
+      "validFrom": "2021-11-08T22:57:01.00313Z",
+      "validTo": "2021-11-08T22:57:25.186525Z",
+      "data": [
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        },
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "73e551e3-96ad-026e-8e39-28b545624863",
+      "validFrom": "2021-11-08T22:57:25.186525Z",
+      "validTo": "2021-11-08T23:00:00.233419Z",
+      "data": [
+        {
+          "odds": 0.0254,
+          "payout": "954",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.177,
+          "payout": "137",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.005600000000000001,
+          "payout": "4327",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0115,
+          "payout": "2107",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0022,
+          "payout": "11014",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60576",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0167,
+          "payout": "1451",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.3682,
+          "payout": "66",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3231",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0155,
+          "payout": "1564",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0,
+          "payout": "100000",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0062,
+          "payout": "3909",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "372",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0131,
+          "payout": "1850",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "121151",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.124,
+          "payout": "196",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0843,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0208,
+          "payout": "1165",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "80767",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48460",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0335,
+          "payout": "724",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "34615",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "eadfb366-edfb-bf95-62e1-4521c5e7d744",
+      "validFrom": "2021-11-08T23:00:00.233419Z",
+      "validTo": "2021-11-09T00:00:00.221527Z",
+      "data": [
+        {
+          "odds": 0.0313,
+          "payout": "768",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.2064,
+          "payout": "117",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0049,
+          "payout": "4904",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0147,
+          "payout": "1635",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.002,
+          "payout": "12013",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "48052",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0212,
+          "payout": "1134",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.3189,
+          "payout": "76",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0096,
+          "payout": "2503",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0134,
+          "payout": "1793",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0001,
+          "payout": "240260",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0054,
+          "payout": "4450",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.056799999999999996,
+          "payout": "423",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.011399999999999999,
+          "payout": "2108",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "120130",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0179,
+          "payout": "1343",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.1442,
+          "payout": "167",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0728,
+          "payout": "331",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "120130",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.025699999999999997,
+          "payout": "935",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60065",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "60065",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0407,
+          "payout": "591",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.001,
+          "payout": "24026",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "bc960ada-cc7c-559e-67cb-cfb823497df8",
+      "validFrom": "2021-11-09T00:00:00.221527Z",
+      "validTo": "2021-11-09T01:00:00.358157Z",
+      "data": [
+        {
+          "odds": 0.0775,
+          "payout": "308",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.2377,
+          "payout": "101",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0034999999999999996,
+          "payout": "6807",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0127,
+          "payout": "1876",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0027,
+          "payout": "8823",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "47644",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0184,
+          "payout": "1295",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.2725,
+          "payout": "88",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.008199999999999999,
+          "payout": "2906",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0168,
+          "payout": "1418",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0001,
+          "payout": "238220",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0069,
+          "payout": "3453",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0487,
+          "payout": "490",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0143,
+          "payout": "1666",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "79407",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0187,
+          "payout": "1274",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.12279999999999999,
+          "payout": "194",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0745,
+          "payout": "320",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "119110",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0268,
+          "payout": "889",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "47644",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "59555",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0347,
+          "payout": "687",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0009,
+          "payout": "26469",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "b9f717eb-dffb-3e22-063d-95a46a16df28",
+      "validFrom": "2021-11-09T01:00:00.358157Z",
+      "validTo": "2021-11-09T02:00:00.398414Z",
+      "data": [
+        {
+          "odds": 0.0608,
+          "payout": "389",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.2492,
+          "payout": "95",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0042,
+          "payout": "5624",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.01,
+          "payout": "2362",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0033,
+          "payout": "7157",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "59045",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0146,
+          "payout": "1618",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.2805,
+          "payout": "85",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0095,
+          "payout": "2487",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.019,
+          "payout": "1244",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0001,
+          "payout": "236180",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0054,
+          "payout": "4374",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0381,
+          "payout": "620",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.016200000000000003,
+          "payout": "1458",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "118090",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.021,
+          "payout": "1125",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.129,
+          "payout": "184",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.07980000000000001,
+          "payout": "296",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "118090",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0298,
+          "payout": "793",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0006,
+          "payout": "39364",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "78727",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.027000000000000003,
+          "payout": "875",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "33740",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "b3313f99-f684-1375-82b5-0e976e291ea5",
+      "validFrom": "2021-11-09T02:00:00.398414Z",
+      "validTo": "2021-11-09T03:00:00.5358Z",
+      "data": [
+        {
+          "odds": 0.0565,
+          "payout": "415",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.23370000000000002,
+          "payout": "101",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.004,
+          "payout": "5854",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.009300000000000001,
+          "payout": "2518",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0032,
+          "payout": "7317",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0006,
+          "payout": "39024",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.019799999999999998,
+          "payout": "1183",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.2596,
+          "payout": "91",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0129,
+          "payout": "1816",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0177,
+          "payout": "1323",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "117071",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0074,
+          "payout": "3165",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0352,
+          "payout": "666",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0151,
+          "payout": "1551",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "117071",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0277,
+          "payout": "846",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.1189,
+          "payout": "197",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.1012,
+          "payout": "232",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0001,
+          "payout": "234141",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0391,
+          "payout": "599",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.001,
+          "payout": "23414",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0004,
+          "payout": "58536",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0352,
+          "payout": "666",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.001,
+          "payout": "23414",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "3d3af25f-6b67-a76a-07bf-ff32e5000cd3",
+      "validFrom": "2021-11-09T03:00:00.5358Z",
+      "validTo": "2021-11-09T04:00:00.21878Z",
+      "data": [
+        {
+          "odds": 0.0622,
+          "payout": "374",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.2493,
+          "payout": "94",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0048,
+          "payout": "4836",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0075,
+          "payout": "3095",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.004,
+          "payout": "5803",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "46420",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0229,
+          "payout": "1014",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.27190000000000003,
+          "payout": "86",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0103,
+          "payout": "2254",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0141,
+          "payout": "1647",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0001,
+          "payout": "232100",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0088,
+          "payout": "2638",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0392,
+          "payout": "593",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0121,
+          "payout": "1919",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0001,
+          "payout": "232100",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0222,
+          "payout": "1046",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.12710000000000002,
+          "payout": "183",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0808,
+          "payout": "288",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "116050",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0313,
+          "payout": "742",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0008,
+          "payout": "29013",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0006,
+          "payout": "38684",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0278,
+          "payout": "835",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0014000000000000002,
+          "payout": "16579",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "9852df95-0c93-070d-efaa-c1159767b5e1",
+      "validFrom": "2021-11-09T04:00:00.21878Z",
+      "validTo": "2021-11-09T05:00:00.326181Z",
+      "data": [
+        {
+          "odds": 0.057800000000000004,
+          "payout": "399",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.23399999999999999,
+          "payout": "99",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0046,
+          "payout": "5002",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.006999999999999999,
+          "payout": "3287",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0038,
+          "payout": "6055",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0008,
+          "payout": "28758",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0308,
+          "payout": "747",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.2515,
+          "payout": "92",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.013999999999999999,
+          "payout": "1644",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0189,
+          "payout": "1218",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "115030",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.012,
+          "payout": "1918",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0506,
+          "payout": "455",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.011200000000000002,
+          "payout": "2055",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0001,
+          "payout": "230060",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0292,
+          "payout": "788",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.11720000000000001,
+          "payout": "197",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.075,
+          "payout": "307",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "115030",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.041100000000000005,
+          "payout": "560",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0013,
+          "payout": "17697",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "46012",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0362,
+          "payout": "636",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.002,
+          "payout": "11503",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "1eb44ef4-3f94-713b-8bdb-eeb5b7405e67",
+      "validFrom": "2021-11-09T05:00:00.326181Z",
+      "validTo": "2021-11-09T06:00:00.221485Z",
+      "data": [
+        {
+          "odds": 0.0527,
+          "payout": "433",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.21539999999999998,
+          "payout": "106",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0063,
+          "payout": "3620",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0095,
+          "payout": "2401",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0054,
+          "payout": "4223",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "32575",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0286,
+          "payout": "798",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.22820000000000001,
+          "payout": "100",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.018600000000000002,
+          "payout": "1226",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0173,
+          "payout": "1319",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "76007",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.016,
+          "payout": "1426",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0462,
+          "payout": "494",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.015,
+          "payout": "1521",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "114010",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.037599999999999995,
+          "payout": "607",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.1434,
+          "payout": "160",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0684,
+          "payout": "334",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "114010",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0527,
+          "payout": "433",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0019,
+          "payout": "12002",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "45604",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0329,
+          "payout": "694",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0019,
+          "payout": "12002",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "c8346703-4024-d742-9eb8-3fdd648293dd",
+      "validFrom": "2021-11-09T06:00:00.221485Z",
+      "validTo": "2021-11-09T07:00:00.182889Z",
+      "data": [
+        {
+          "odds": 0.04650000000000001,
+          "payout": "486",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.19219999999999998,
+          "payout": "118",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0085,
+          "payout": "2659",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0084,
+          "payout": "2691",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.0074,
+          "payout": "3054",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0011,
+          "payout": "20544",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0365,
+          "payout": "620",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.2005,
+          "payout": "113",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.0239,
+          "payout": "946",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0154,
+          "payout": "1468",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "75327",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0144,
+          "payout": "1570",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0408,
+          "payout": "554",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0098,
+          "payout": "2306",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "75327",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0535,
+          "payout": "423",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.16949999999999998,
+          "payout": "134",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0602,
+          "payout": "376",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0003,
+          "payout": "75327",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0653,
+          "payout": "347",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0021,
+          "payout": "10761",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0007000000000000001,
+          "payout": "32283",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0408,
+          "payout": "554",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0017000000000000001,
+          "payout": "13293",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        }
+      ]
+    },
+    {
+      "entityId": "00000000-0000-0000-0000-000000000000",
+      "hash": "64e2783e-dee7-341e-6578-1258bccd05fb",
+      "validFrom": "2021-11-09T07:00:00.182889Z",
+      "validTo": null,
+      "data": [
+        {
+          "odds": 0.0603,
+          "payout": "372",
+          "teamId": "0b672007-ebfb-476d-8fdb-fb66bad78df2"
+        },
+        {
+          "odds": 0.21280000000000002,
+          "payout": "106",
+          "teamId": "16d1fd9b-c62b-4bed-b68a-b3a2d6e21524"
+        },
+        {
+          "odds": 0.0083,
+          "payout": "2699",
+          "teamId": "23a2cea4-5df7-4ed0-bb2c-b8c297518ada"
+        },
+        {
+          "odds": 0.0069,
+          "payout": "3246",
+          "teamId": "2957236a-6077-4012-a445-8c5be111afd0"
+        },
+        {
+          "odds": 0.009300000000000001,
+          "payout": "2408",
+          "teamId": "2dc7a1fa-3ae6-47ed-8c92-5d80167959f5"
+        },
+        {
+          "odds": 0.0015,
+          "payout": "14930",
+          "teamId": "44d9dc46-7e81-4e21-acff-c0f5dd399ae3"
+        },
+        {
+          "odds": 0.0308,
+          "payout": "728",
+          "teamId": "57d3f614-f8d3-4dfd-b486-075f823fdb0b"
+        },
+        {
+          "odds": 0.1826,
+          "payout": "123",
+          "teamId": "6526d5df-6a9c-48e1-ba50-12dec0d8b22f"
+        },
+        {
+          "odds": 0.028300000000000002,
+          "payout": "792",
+          "teamId": "74aea6b6-34f9-48f4-b298-7345e1f9f7cb"
+        },
+        {
+          "odds": 0.0126,
+          "payout": "1778",
+          "teamId": "75667373-b350-499b-b86e-5518b6f9f6ab"
+        },
+        {
+          "odds": 0.0006,
+          "payout": "37324",
+          "teamId": "76d3489f-c7c4-4cb9-9c58-b1e1bab062d1"
+        },
+        {
+          "odds": 0.0173,
+          "payout": "1295",
+          "teamId": "86f4485a-a6db-470b-82f5-e95e6b353537"
+        },
+        {
+          "odds": 0.0334,
+          "payout": "671",
+          "teamId": "89796ffb-843a-4163-8dec-1bef229c68cb"
+        },
+        {
+          "odds": 0.0138,
+          "payout": "1623",
+          "teamId": "8981c839-cbcf-47e3-a74e-8731dcff24fe"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "44788",
+          "teamId": "8d7ba290-5f87-403c-81e3-cf5a2b6a6082"
+        },
+        {
+          "odds": 0.0173,
+          "payout": "1295",
+          "teamId": "93e71a0e-80fc-46b7-beaf-d204c425fe03"
+        },
+        {
+          "odds": 0.1865,
+          "payout": "121",
+          "teamId": "a01f0ade-0186-464d-8c68-e19a29cb66f0"
+        },
+        {
+          "odds": 0.0771,
+          "payout": "291",
+          "teamId": "b069fdc6-2204-423a-932c-09037adcd845"
+        },
+        {
+          "odds": 0.0002,
+          "payout": "111970",
+          "teamId": "b320131f-da0d-43e1-9b98-f936a0ee417a"
+        },
+        {
+          "odds": 0.0616,
+          "payout": "364",
+          "teamId": "b35926d4-22a3-4419-8fab-686c41687055"
+        },
+        {
+          "odds": 0.0028000000000000004,
+          "payout": "7998",
+          "teamId": "b7df2ea6-f4e8-4e6b-8c98-f730701f3717"
+        },
+        {
+          "odds": 0.0005,
+          "payout": "44788",
+          "teamId": "d82a1a80-dff3-4767-bab6-484b2eb7aee1"
+        },
+        {
+          "odds": 0.0334,
+          "payout": "671",
+          "teamId": "e11df0cc-3a95-4159-9a84-fecbbf23ae05"
+        },
+        {
+          "odds": 0.0017000000000000001,
+          "payout": "13173",
+          "teamId": "effdbd8d-a54f-4049-a3c8-b5f944e5278b"
+        }
+      ]
+    }
+  ]
+}

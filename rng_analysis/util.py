@@ -12,7 +12,7 @@ def player_oldest_record(player):
 
 
 def load_players_oldest_records(exclude_initial=False):
-    with open('all_players.json', 'r') as f:
+    with open('data/all_players.json', 'r') as f:
         players_oldest = json.load(f)
 
     if exclude_initial:

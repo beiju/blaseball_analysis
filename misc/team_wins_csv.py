@@ -27,49 +27,38 @@ TEAM_IDS = [
     "46358869-dce9-4a01-bfba-ac24fc56f57e",  # Mechanics
     "d9f89a8a-c563-493e-9d64-78e4f9a55d4a",  # Georgias
     "2e22beba-8e36-42ba-a8bf-975683c52b5f",  # Queens
-    "b47df036-3aa4-4b98-8e9e-fe1d3ff1894b",
-    # Queens (wait one of these must be the paws)
+    "b47df036-3aa4-4b98-8e9e-fe1d3ff1894b",  # Queens (wait one of these must be the paws)
 ]
 
 
 def main():
-    seasons = requests.get(
-        "https://api.sibr.dev/chronicler/v2/entities?type=season").json()
-    standingses = requests.get(
-        "https://api.sibr.dev/chronicler/v2/entities?type=standings").json()
+    seasons = requests.get("https://api.sibr.dev/chronicler/v2/entities?type=season").json()
+    standingses = requests.get("https://api.sibr.dev/chronicler/v2/entities?type=standings").json()
     standings_dict = {st['entityId']: st['data'] for st in standingses['items']}
 
     # Season 2 bad :(
-    standings_s2 = requests.get(
-        "https://api.sibr.dev/chronicler/v2/entities?type=standings&id=2049b677-d869-472e-a25d-d9d6a094a547&at=2020-08-08T04:34:32.691Z").json()
-    standings_dict[standings_s2['items'][0]['entityId']] = \
-    standings_s2['items'][0]['data']
+    standings_s2 = requests.get("https://api.sibr.dev/chronicler/v2/entities?type=standings&id=2049b677-d869-472e-a25d-d9d6a094a547&at=2020-08-08T04:34:32.691Z").json()
+    standings_dict[standings_s2['items'][0]['entityId']] = standings_s2['items'][0]['data']
 
     beta_seasons = sorted(
-        (season['data']['seasonNumber'],
-         standings_dict[season['data']['standings']]['wins'])
+        (season['data']['seasonNumber'], standings_dict[season['data']['standings']]['wins'])
         for season in seasons['items']
         if season['data']['league'] == 'd8545021-e9fc-48a3-af74-48685950a183'
     )
 
-    teams = requests.get(
-        "https://api.sibr.dev/chronicler/v2/entities?type=team&at=2021-06-26T00:00:00Z&id=" + ",".join(
-            TEAM_IDS)).json()
-    teams_dict = {team['entityId']: team['data']['fullName'] for team in
-                  teams['items']}
+    teams = requests.get("https://api.sibr.dev/chronicler/v2/entities?type=team&at=2021-06-26T00:00:00Z&id=" + ",".join(TEAM_IDS)).json()
+    teams_dict = {team['entityId']: team['data']['fullName'] for team in teams['items']}
 
     data = {
         season_n: {
-            teams_dict[team]: team_wins.get(team, float('nan')) for team in
-            TEAM_IDS
+            teams_dict[team]: team_wins.get(team, float('nan')) for team in TEAM_IDS
             if team in teams_dict
         } for (season_n, team_wins) in beta_seasons
     }
 
     for team in TEAM_IDS:
         if team not in teams_dict:
-            print("Not outputting data for", team,
-                  "(unknown as of start of s24)")
+            print("Not outputting data for", team, "(unknown as of start of s24)")
 
     dataframe = pd.DataFrame(data)
     dataframe.to_csv("team_wins.csv")

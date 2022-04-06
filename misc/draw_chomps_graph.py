@@ -33,9 +33,16 @@ TEAMS = [
     ("b47df036-3aa4-4b98-8e9e-fe1d3ff1894b", "Paws"),
 ]
 
+leadoff_hitter_victims = [
+    "8d87c468-699a-47a8-b40d-cfb73a5660ad",
+    "7966eb04-efcc-499b-8f03-d13916330531",
+    "ca3f1c8c-c025-4d8e-8eef-5be6accbeb16",
+    "36569151-a2fb-43c1-9df7-2df512424c82",
+]
+
 
 def main():
-    data = load_data("chomps_graph_data.csv")
+    data = load_data("chomps_graph_data2.csv")
 
     team_ids, team_names = zip(*TEAMS)
 
@@ -43,25 +50,33 @@ def main():
     data = data.reindex(team_ids)
 
     def plot_group(name: str, color: str, bottom, label):
-        no_soul = data[name] - data[f"{name}_with_soul"]
-        ax.bar(team_names, no_soul, bottom=bottom,
-               color=color, edgecolor="black", label=label)
+        # there's probably a better way to do this
+        leadoff_s24 = data[f"{name}_leadoff_s24"] * 0
+        leadoff_s24.loc[leadoff_hitter_victims] = data[f"{name}_leadoff_s24"].loc[leadoff_hitter_victims]
+        ax.bar(team_names, leadoff_s24, bottom=bottom,
+               color=color, edgecolor="#0008", hatch="xxx")
         if bottom is None:
-            bottom = no_soul
+            bottom = leadoff_s24
         else:
-            bottom += no_soul
+            bottom += leadoff_s24
 
-        with_soul = data[f"{name}_with_soul"] - data[f"{name}_on_soul"]
+        no_soul = data[name] - data[f"{name}_with_soul"] - leadoff_s24
+        ax.bar(team_names, no_soul, bottom=bottom,
+               color=color, edgecolor="#0008", label=label)
+        bottom += no_soul
+
+        with_soul = data[f"{name}_with_soul"]
         ax.bar(team_names, with_soul, bottom=bottom,
-               color=color, edgecolor="black", hatch="//")
+               color=color, edgecolor="#0008", hatch="///")
         bottom += with_soul
 
         return bottom
 
     fig = plt.figure(constrained_layout=True, figsize=(16, 9))
-    gs = fig.add_gridspec(2, 26, height_ratios=(9, 1), bottom=0.8)
+    gs = fig.add_gridspec(2, 27, height_ratios=(6, 1),
+                          width_ratios=[0.2] + ([1] * 26))
     ax = fig.add_subplot(gs[0, :])
-    pie_axes = [fig.add_subplot(gs[1, i]) for i in range(26)]
+    pie_axes = [fig.add_subplot(gs[1, i + 1]) for i in range(26)]
 
     bottom = plot_group("real_attacks", "#e41a1c", None, "Chomp")
     bottom = plot_group("defended_item", "#4daf4a", bottom, "Defended: Item")
@@ -72,7 +87,7 @@ def main():
     bottom = plot_group("defended_cannons", "#377eb8", bottom,
                         "Expelled (Salmon Cannons)")
 
-    ax.set_ylim(0, 60)
+    ax.set_ylim(0, 200)
     ax.set_xlim(-0.6, len(team_ids) - 0.4)
 
     plt.setp(ax.get_xticklabels(), rotation=-25, ha="left",
@@ -81,61 +96,58 @@ def main():
     handles, labels = ax.get_legend_handles_labels()
     handles, labels = handles[::-1], labels[::-1]
     handles.append(
-        mpatches.Patch(facecolor="#fff", hatch="//", edgecolor="black"))
+        mpatches.Patch(facecolor="#fff", hatch="///", edgecolor="black"))
     labels.append("On same team as\nChorby Soul/Chorby's Soul")
+    handles.append(
+        mpatches.Patch(facecolor="#fff", hatch="xxx", edgecolor="black"))
+    labels.append("S24 leadoff hitter effect")
     legend = ax.legend(handles, labels, fontsize='x-large')
-    legend.legendHandles[-1].set_y(9)
+    legend.legendHandles[-2].set_y(9)
 
     fig.suptitle("Consumer Attacks by Team", fontsize="xx-large")
-    ax.set_title("Excluding attacks on Chorby Soul")
+    ax.set_title("Including attacks on Chorby Soul and Chorby's Soul")
 
     # Hijacking the xlabel as a title for the pie chart
-    ax.set_xlabel("Games spent at each Credit Rating", fontsize="x-large")
+    ax.set_xlabel("Games spent at each dangerous Credit Rating",
+                  fontsize="xx-large", labelpad=20)
 
     pie_data = pd.read_csv("days_at_level.csv", index_col=0)
+    pie_data.drop(columns=['safe'], inplace=True)
 
     pie_colors = [
-        "#deebf7",
-        "#c6dbef",
-        "#9ecae1",
-        "#6baed6",
-        "#4292c6",
-        "#fc9272",
-        "#fb6a4a",
-        "#ef3b2c",
-        "#cb181d",
-        "#a50f15",
-        "#67000d",
+        "#fdbb84",
+        "#fc8d59",
+        "#ef6548",
+        "#d7301f",
+        "#b30000",
+        "#7f0000",
         "#000"
     ]
-    max_days = pie_data.sum(axis=1).max() + 1  # +1 for floating point error
+    max_days = pie_data.max().max()
     for i, pie_ax in enumerate(pie_axes):
-        pie_ax.axis("equal")
-        days = [pie_data.loc[team_ids[i], str(j)] / max_days for j in range(0, 12)]
-        pie_ax.pie(days, colors=pie_colors, normalize=False)
-        # Outline the pie
-        pie_ax.pie([sum(days)], colors=["#0000"], normalize=False,
-                   wedgeprops={"edgecolor": "#555", 'linewidth': 1,
-                               'linestyle': 'solid', 'antialiased': True})
+        pie_ax.axis("off")
+        pie_ax.bar(pie_data.columns, pie_data.loc[team_ids[i]].array,
+                   width=1.0, color=pie_colors)
+        # pie_ax.add_patch(
+        #     mpatches.Rectangle((-0.5, 0), 12, max_days,
+        #                        linewidth=0.5, edgecolor='k', facecolor='none')
+        # )
 
-        # I do not know why the barely-full pies need different offsets
-        if sum(days) < 0.25:
-            y_offset = -1.45
-        else:
-            y_offset = -1.75
-        pie_ax.set_ylim(-1.25 + y_offset, 1.25 + y_offset)
+        pie_ax.set_ylim(-max_days * 1, max_days * 1.05)
 
     fig.legend(
         [mpatches.Patch(facecolor=color, edgecolor="black") for color in
          pie_colors],
-        ["0D", "1D", "2D", "3D", "C", "Low A", "High A", "AA", "AAA", "AAAA",
-         "AAAAA"],
+        ["Low A*", "High A*", "AA*", "AAA*", "AAAA*", "AAAAA*", "Beyond AAAAA"],
         loc="lower center", ncol=len(pie_colors), fontsize="large"
     )
+    fig.text(0.95, .02, "* or season 24 equivalent", ha='right')
+    fig.text(0.05, .02, "visualization by beiju", ha='left', color="#0006")
 
     # fig.tight_layout()
 
-    plt.show()
+    plt.savefig("chomps_with_soul.png", dpi=300, )
+    # plt.show()
 
 
 def zero_defaultdict():

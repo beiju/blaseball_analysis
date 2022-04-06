@@ -46,20 +46,64 @@ def start_time_of_each_day():
                 # Last day
                 print(day - 1, "days in season", season)
                 break
-            yield time
+            yield time, season
 
     print(days, "total days with consumers")
 
 
-def main():
-    days_at_level = defaultdict(lambda: defaultdict(lambda: 0))
+normal_levels = {
+    0: "safe",  # 0D
+    1: "safe",  # 1D
+    2: "safe",  # 2D
+    3: "safe",  # 3D
+    4: "safe",  # C
+    5: "danger1",  # Low A
+    6: "danger2",  # High A
+    7: "danger3",  # AA
+    8: "danger4",  # AAA
+    9: "danger5",  # AAAA
+    10: "danger6",  # AAAAA
+    11: "danger7",  # Beyond AAAAA
+}
 
-    for time in tqdm(start_time_of_each_day(), total=1231):
+s24_levels = {
+    0: "danger5",  # 0D
+    1: "danger4",  # 1D
+    2: "danger3",  # 2D
+    3: "danger2",  # 3D
+    4: "danger1",  # C
+    5: "safe",  # Low A
+    6: "safe",  # High A
+    7: "safe",  # AA
+    8: "safe",  # AAA
+    9: "safe",  # AAAA
+    10: "safe",  # AAAAA
+    11: "safe",  # Beyond AAAAA
+}
+
+def main():
+    days_at_level = {
+        "safe": defaultdict(lambda: 0),
+        "danger1": defaultdict(lambda: 0),
+        "danger2": defaultdict(lambda: 0),
+        "danger3": defaultdict(lambda: 0),
+        "danger4": defaultdict(lambda: 0),
+        "danger5": defaultdict(lambda: 0),
+        "danger6": defaultdict(lambda: 0),
+        "danger7": defaultdict(lambda: 0),
+    }
+
+    for time, season in tqdm(start_time_of_each_day(), total=1231):
         teams = chronicler.get_entities("team", TEAM_IDS, time, cache_time=None)
         for team in teams:
-            days_at_level[team["entityId"]][team["data"]["level"]] += 1
+            if season == 24:
+                danger = s24_levels[team["data"]["level"]]
+            else:
+                danger = normal_levels[team["data"]["level"]]
 
-    data = pd.DataFrame.from_dict(days_at_level, orient='index').fillna(0)
+            days_at_level[danger][team["entityId"]] += 1
+
+    data = pd.DataFrame.from_dict(days_at_level).fillna(0)
     data.to_csv("days_at_level.csv")
 
 

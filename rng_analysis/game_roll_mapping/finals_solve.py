@@ -57,64 +57,12 @@ def ss(pitcher, batter, runner=False):
         contact_val=contact
     ))
 
-
-def ball(pitcher, batter, runner=False):
-    weather_roll = weather_check(False)
-    mystery = r.next()
-    steal = runner_check(runner)
-    strike, swing = strike_swing_check(pitcher, batter, "b")
-
-    event_info.append(EventInfo(
-        event_type=EventType.Ball,
-        weather_val=weather_roll,
-        mystery_val=mystery,
-        has_runner=runner,
-        steal_val=steal,
-        strike_zone_val=strike,
-        pitcher_ruth=by_name[pitcher]["ruthlessness"],
-        batter_path=by_name[batter]["patheticism"],
-        batter_moxie=by_name[batter]["moxie"],
-        swing_val=swing
-    ))
-
-
 def advance_check(advance):
     if advance:
         advance_roll = r.next()
 
 
 def foul(pitcher, batter, runner=False):
-    weather_roll = weather_check(False)
-    mystery = r.next()
-    steal = runner_check(runner)
-    strike, swing = strike_swing_check(pitcher, batter, "f")
-    contact = r.next()
-    fair = r.next()
-
-    batter_path = by_name[batter]["patheticism"]
-
-    batter_musc = by_name[batter]["musclitude"]
-    if fair > 0.36:
-        print(
-            "warn @ {}: rolled high fair on foul ({}) with musc {:.03f}".format(
-                r.get_state_str(), fair, batter_musc
-            )
-        )
-
-    event_info.append(EventInfo(
-        event_type=EventType.Foul,
-        weather_val=weather_roll,
-        mystery_val=mystery,
-        has_runner=runner,
-        steal_val=steal,
-        strike_zone_val=strike,
-        pitcher_ruth=by_name[pitcher]["ruthlessness"],
-        batter_path=by_name[batter]["patheticism"],
-        batter_moxie=by_name[batter]["moxie"],
-        swing_val=swing,
-        contact_val=contact,
-        foul_val=fair
-    ))
 
 
 def ground_out(pitcher, batter, out_to, runner=False, inning_ending=False, is_on_third=False):
@@ -213,13 +161,6 @@ def flyout(pitcher, batter, out_to, runner=False, inning_ending=False):
 
 
 def bird():
-    weather_roll = weather_check(True)
-    r.next()
-    r.next()
-    event_info.append(EventInfo(
-        event_type=EventType.Weather,
-        weather_val=weather_roll
-    ))
 
 
 def solo_homer(pitcher, batter, runner=False):

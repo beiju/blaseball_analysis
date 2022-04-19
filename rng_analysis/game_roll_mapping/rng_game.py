@@ -7,7 +7,7 @@ import pandas as pd
 import requests_cache
 from blaseball_mike import chronicler
 from blaseball_mike.session import _SESSIONS_BY_EXPIRY
-from parsy import string, Parser, seq, regex, alt
+from parsy import string, Parser, alt
 
 from nd.rng import Rng
 
@@ -20,13 +20,15 @@ _SESSIONS_BY_EXPIRY[None] = session
 
 
 def chron_get_by_key(type_: str, first_update: dict, key: str):
-    return [item['data'] for item in chronicler.v2.get_entities(
+    items = {item['entityId']: item['data'] for item in chronicler.v2.get_entities(
         type_=type_,
         id_=[first_update['data']['home' + key],
              first_update['data']['away' + key]],
         at=first_update['timestamp'],
         cache_time=None,
-    )]
+    )}
+
+    return [items[first_update['data']['home' + key]], items[first_update['data']['away' + key]]]
 
 
 @dataclass
@@ -106,27 +108,25 @@ class BatterUp(Event):
         return None
 
 
-def top_of_inning(top_or_bottom: str, batting_team: TeamInfo) -> Parser:
-    return seq(
-        string(top_or_bottom),
-        string(" of "),
-        regex(r"\d+"),
-        string(", "),
-        string(batting_team.team['fullName']),
-        string(" batting.")
+def top_of_inning(update: dict, batting_team: TeamInfo) -> Parser:
+    top_or_bottom = "Top" if update['topOfInning'] else "Bottom"
+    return string(
+        f"{top_or_bottom} of {update['inning'] + 1}, {batting_team.team['fullName']} batting."
     ).map(lambda _: InningStart())
 
 
-def batter_up(update: dict, batting_team: TeamInfo) -> Parser:
-    if update['topOfInning']:
-        batter_name = update['awayBatterName']
+def batter_up(batting_team: TeamInfo) -> Optional[Parser]:
+    batter = batting_team.active_batter()
+    if batter is None:
+        return None
+
+    if batter['bat']:
+        item_str = f", wielding {batter['bat']}"
     else:
-        batter_name = update['homeBatterName']
-    return seq(
-        string(batter_name),
-        string(" batting for the "),
-        string(batting_team.team['nickname']),
-        string(".")
+        item_str = ""
+
+    return string(
+        f"{batter['name']} batting for the {batting_team.team['nickname']}{item_str}."
     ).map(lambda _: BatterUp())
 
 
@@ -294,6 +294,57 @@ class HomeRun(PitchEvent):
         )
 
 
+class GroundOut(PitchEvent):
+    def __init__(self, inning_ending: bool, runner_on: bool, runner_on_third: bool,
+                 possible_fielders: List[int], batter: dict, pitcher: dict):
+        super().__init__(batter, pitcher)
+        self.inning_ending = inning_ending
+        self.runner_on = runner_on
+        self.runner_on_third = runner_on_third
+        # Should always be a list of one until we get to late expansion
+        self.possible_fielders = possible_fielders
+
+    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+        # This line must be first
+        common = self.apply_common(rng, update)
+
+        strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "go")
+        contact = rng.next()
+        fair = rng.next()
+        one = rng.next()
+        hit = rng.next()
+        three = rng.next()
+        rng.next()
+        fielder = rng.next()
+
+        if not self.inning_ending:
+            # This is the "runner advance" check
+            if self.runner_on:
+                rng.next()
+
+            if self.runner_on_third:
+                rng.next()  # rgsots check??
+
+        if int(fielder * 9) not in self.possible_fielders:
+            print(
+                "ERROR @ {}: ground out rolled {}, wrong fielder".format(
+                    rng.get_state_str(), fielder
+                )
+            )
+
+        return EventInfo(
+            event_type=EventType.HomeRun,
+            strike_zone_val=strike,
+            swing_val=swing,
+            contact_val=contact,
+            foul_val=fair,
+            one_val=one,
+            hit_val=hit,
+            three_val=three,
+            **common
+        )
+
+
 class Birds(Event):
     def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
         weather_roll = weather_check(rng, update['weather'], True)
@@ -362,18 +413,41 @@ def birds() -> Parser:
     ).map(lambda _: Birds())
 
 
-def parser(update: dict, top_or_bottom: str, batting_team: TeamInfo,
-           pitching_team: TeamInfo) -> Parser:
+def ground_out(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> \
+        Optional[Parser]:
+    batter = batting_team.active_batter()
+    if batter is None:
+        return None
+
+    # In the inning-ending event Blaseball resets the outs count to zero. This
+    # is the only way it can be zero during a ground out, because the ground out
+    # event always increments outs.
+    inning_ending = update['halfInningOuts'] == 0
+    runner_on_third = (bool(update['basesOccupied']) and
+                       update['basesOccupied'][-1] == 2)
+
+    return (
+            string(f"{batter['name']} hit a ground out to ") >>
+            alt(*[string(fielder['name']) for fielder in pitching_team.lineup])
+            << string(".")
+    ).map(lambda name: GroundOut(inning_ending, bool(update['basesOccupied']), runner_on_third,
+                                 [i for i, player in enumerate(pitching_team.lineup)
+                                  if player['name'] == name],
+                                 batter=batter, pitcher=pitching_team.pitcher))
+
+
+def parser(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     return alt(
         string("Play ball!").map(lambda _: PlayBall()),
-        top_of_inning(top_or_bottom, batting_team),
-        batter_up(update, batting_team),
+        top_of_inning(update, batting_team),
+        batter_up(batting_team),
         strike_looking(update, batting_team, pitching_team),
         foul_ball(update, batting_team, pitching_team),
         birds(),
         ball(update, batting_team, pitching_team),
         home_run(update, batting_team, pitching_team),
         strike_swinging(update, batting_team, pitching_team),
+        ground_out(update, batting_team, pitching_team)
     )
 
 
@@ -383,9 +457,9 @@ def apply_game_update(update: dict, rng: Rng, home: TeamInfo,
     print(update_data['lastUpdate'])
 
     if update_data['topOfInning']:
-        p = parser(update_data, "Top", away, home)
+        p = parser(update_data, away, home)
     else:
-        p = parser(update_data, "Batting", home, away)
+        p = parser(update_data, home, away)
 
     return p.parse(update_data['lastUpdate']).apply(rng, update_data)
 
@@ -399,15 +473,10 @@ def main():
         game_ids=game_id,
         cache_time=None
     )
-    home_team, away_team = chron_get_by_key("team", game_updates[0],
-                                            "Team")
-    home_pitcher, away_pitcher = chron_get_by_key("player",
-                                                  game_updates[0],
-                                                  "Pitcher")
-    home_lineup = chron_get_lineup(game_updates[0]['timestamp'],
-                                   home_team)
-    away_lineup = chron_get_lineup(game_updates[0]['timestamp'],
-                                   away_team)
+    home_team, away_team = chron_get_by_key("team", game_updates[0], "Team")
+    home_pitcher, away_pitcher = chron_get_by_key("player", game_updates[0], "Pitcher")
+    home_lineup = chron_get_lineup(game_updates[0]['timestamp'], home_team)
+    away_lineup = chron_get_lineup(game_updates[0]['timestamp'], away_team)
 
     home = TeamInfo(team=home_team, pitcher=home_pitcher,
                     lineup=home_lineup)
@@ -435,12 +504,14 @@ def main():
 
 
 def chron_get_lineup(timestamp: str, team: dict):
-    return [item['data'] for item in chronicler.v2.get_entities(
+    players = {item['entityId']: item['data'] for item in chronicler.v2.get_entities(
         type_="player",
         id_=team["lineup"],
         at=timestamp,
         cache_time=None,
-    )]
+    )}
+
+    return [players[player_id] for player_id in team['lineup']]
 
 
 if __name__ == '__main__':

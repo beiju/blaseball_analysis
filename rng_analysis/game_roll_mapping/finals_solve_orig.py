@@ -193,17 +193,17 @@ def two_run_homer(pitcher, batter, runner=False):
 
 def single(pitcher, batter, runner=False, is_on_third=False):
     weather_check(False)
-    r.next()
+    r0 = r.next()
     runner_check(runner)
     strike_swing_check(pitcher, batter, "h")
-    r.next()
-    r.next()
-    r.next()
-    r.next()
-    r.next()
-    r.next()
-    r.next()
-    r.next()
+    r1 = r.next()
+    r2 = r.next()
+    r3 = r.next()
+    r4 = r.next()
+    r5 = r.next()
+    r6 = r.next()
+    r7 = r.next()
+    r8 = r.next()
 
     if not is_on_third:
         advance_check(runner)

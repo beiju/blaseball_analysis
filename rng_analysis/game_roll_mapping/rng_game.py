@@ -7,7 +7,7 @@ import pandas as pd
 import requests_cache
 from blaseball_mike import chronicler
 from blaseball_mike.session import _SESSIONS_BY_EXPIRY
-from parsy import string, Parser, alt
+from parsy import string, Parser, alt, eof
 
 from nd.rng import Rng
 
@@ -89,22 +89,22 @@ class Event(ABC):
         self.batter = batter
         self.pitcher = pitcher
 
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         raise NotImplementedError("Method on ABC called")
 
 
 class PlayBall(Event):
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         return None
 
 
 class InningStart(Event):
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         return None
 
 
 class BatterUp(Event):
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         return None
 
 
@@ -178,11 +178,11 @@ def strike_swing_check(rng: Rng, pitcher: dict, batter: dict, outcome: str):
 
 
 class PitchEvent(Event, ABC):
-    def apply_common(self, rng: Rng, update: dict) -> dict:
+    def apply_common(self, rng: Rng, update: dict, prev_update: dict) -> dict:
         weather_roll = weather_check(rng, update['weather'])
         mystery = rng.next()
 
-        if update['baseRunners']:
+        if prev_update['baseRunners']:
             steal = runner_check(rng)
         else:
             steal = None
@@ -199,9 +199,9 @@ class PitchEvent(Event, ABC):
 
 
 class StrikeLooking(PitchEvent):
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         # This line must be first
-        common = self.apply_common(rng, update)
+        common = self.apply_common(rng, update, prev_update)
         strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "sl")
 
         return EventInfo(
@@ -213,9 +213,9 @@ class StrikeLooking(PitchEvent):
 
 
 class FoulBall(PitchEvent):
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         # This line must be first
-        common = self.apply_common(rng, update)
+        common = self.apply_common(rng, update, prev_update)
 
         strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "f")
         contact = rng.next()
@@ -240,9 +240,9 @@ class FoulBall(PitchEvent):
 
 
 class StrikeSwinging(PitchEvent):
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         # This line must be first
-        common = self.apply_common(rng, update)
+        common = self.apply_common(rng, update, prev_update)
         strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "ss")
         contact = rng.next()
 
@@ -256,9 +256,9 @@ class StrikeSwinging(PitchEvent):
 
 
 class Ball(PitchEvent):
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         # This line must be first
-        common = self.apply_common(rng, update)
+        common = self.apply_common(rng, update, prev_update)
 
         strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "b")
 
@@ -271,9 +271,9 @@ class Ball(PitchEvent):
 
 
 class HomeRun(PitchEvent):
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         # This line must be first
-        common = self.apply_common(rng, update)
+        common = self.apply_common(rng, update, prev_update)
 
         strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "h")
         contact = rng.next()
@@ -294,6 +294,43 @@ class HomeRun(PitchEvent):
         )
 
 
+class BaseHit(PitchEvent):
+    def __init__(self, batter: dict, pitcher: dict, bases_occupied: List[int], hit_type: str):
+        super().__init__(batter, pitcher)
+        self.bases_occupied = bases_occupied
+        self.hit_type = hit_type
+
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
+        # This line must be first
+        common = self.apply_common(rng, update, prev_update)
+
+        strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "h")
+        contact = rng.next()
+        fair = rng.next()
+        one = rng.next()
+        hit = rng.next()
+        three = rng.next()
+        r2 = rng.next()
+        r1 = rng.next()
+        last = rng.next()
+
+        # If there's a player on any base but third
+        if any(base < 2 for base in self.bases_occupied):
+            rng.next()
+
+        return EventInfo(
+            event_type=EventType.HomeRun,
+            strike_zone_val=strike,
+            swing_val=swing,
+            contact_val=contact,
+            foul_val=fair,
+            one_val=one,
+            hit_val=hit,
+            three_val=three,
+            **common
+        )
+
+
 class GroundOut(PitchEvent):
     def __init__(self, inning_ending: bool, runner_on: bool, runner_on_third: bool,
                  possible_fielders: List[int], batter: dict, pitcher: dict):
@@ -304,9 +341,9 @@ class GroundOut(PitchEvent):
         # Should always be a list of one until we get to late expansion
         self.possible_fielders = possible_fielders
 
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         # This line must be first
-        common = self.apply_common(rng, update)
+        common = self.apply_common(rng, update, prev_update)
 
         strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "go")
         contact = rng.next()
@@ -346,7 +383,7 @@ class GroundOut(PitchEvent):
 
 
 class Birds(Event):
-    def apply(self, rng: Rng, update: dict) -> Optional[EventInfo]:
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         weather_roll = weather_check(rng, update['weather'], True)
         # TODO Check bird message index and number
         rng.next()
@@ -413,8 +450,7 @@ def birds() -> Parser:
     ).map(lambda _: Birds())
 
 
-def ground_out(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> \
-        Optional[Parser]:
+def ground_out(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Optional[Parser]:
     batter = batting_team.active_batter()
     if batter is None:
         return None
@@ -436,7 +472,27 @@ def ground_out(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) ->
                                  batter=batter, pitcher=pitching_team.pitcher))
 
 
-def parser(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
+def base_hit(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Optional[
+    Parser]:
+    batter = batting_team.active_batter()
+    if batter is None:
+        return None
+
+    # man the auto-formatter really just doesnt know what to do with this one
+    return (
+            string(f"{batter['name']} hits a ") >>
+            alt(string("Single"), string("Double"), string("Triple"))
+            << string("!")
+            << alt(
+        eof,
+        string(" 1 scores.")
+    )
+    ).map(lambda hit_type: BaseHit(batter=batter, pitcher=pitching_team.pitcher,
+                                   bases_occupied=prev_update['basesOccupied'], hit_type=hit_type))
+
+
+def parser(update: dict, prev_update: dict,
+           batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     return alt(
         string("Play ball!").map(lambda _: PlayBall()),
         top_of_inning(update, batting_team),
@@ -447,21 +503,23 @@ def parser(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Par
         ball(update, batting_team, pitching_team),
         home_run(update, batting_team, pitching_team),
         strike_swinging(update, batting_team, pitching_team),
-        ground_out(update, batting_team, pitching_team)
+        ground_out(update, batting_team, pitching_team),
+        base_hit(prev_update, batting_team, pitching_team),
     )
 
 
-def apply_game_update(update: dict, rng: Rng, home: TeamInfo,
+def apply_game_update(update: dict, prev_update: dict, rng: Rng, home: TeamInfo,
                       away: TeamInfo) -> Optional[EventInfo]:
     update_data = update['data']
+    prev_update_data = None if prev_update is None else prev_update['data']
     print(update_data['lastUpdate'])
 
     if update_data['topOfInning']:
-        p = parser(update_data, away, home)
+        p = parser(update_data, prev_update_data, away, home)
     else:
-        p = parser(update_data, home, away)
+        p = parser(update_data, prev_update_data, home, away)
 
-    return p.parse(update_data['lastUpdate']).apply(rng, update_data)
+    return p.parse(update_data['lastUpdate']).apply(rng, update_data, prev_update_data)
 
 
 def main():
@@ -484,6 +542,7 @@ def main():
                     lineup=away_lineup)
 
     data_rows = []
+    prev_update = None
     for update in game_updates:
         # We don't know why these offsets are required
         if update["data"]["_id"] == "ad3f8b4a-7914-b7cb-17cb-e5f52929db8c":
@@ -496,9 +555,11 @@ def main():
         if update["data"]["homeBatter"]:
             home.active_batter_id = update["data"]["homeBatter"]
 
-        event_info = apply_game_update(update, game_rng, home, away)
+        event_info = apply_game_update(update, prev_update, game_rng, home, away)
         if event_info is not None:
             data_rows.append(event_info)
+
+        prev_update = update
 
     pd.DataFrame(data_rows).to_csv(f"game_{game_id}.csv")
 

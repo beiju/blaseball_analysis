@@ -7,7 +7,7 @@ import pandas as pd
 import requests_cache
 from blaseball_mike import chronicler
 from blaseball_mike.session import _SESSIONS_BY_EXPIRY
-from parsy import string, Parser, alt, eof
+from parsy import string, Parser, alt, eof, fail
 
 from nd.rng import Rng
 
@@ -48,6 +48,13 @@ class TeamInfo:
 
         raise ValueError("Couldn't find active batter in lineup")
 
+    def batter_by_id(self, batter_id: str):
+        for batter in self.lineup:
+            if batter["_id"] == batter_id:
+                return batter
+
+        raise ValueError("Batter not found")
+
 
 class EventType(Enum):
     Weather = auto()
@@ -62,6 +69,7 @@ class EventType(Enum):
     Triple = auto()
     Steal = auto()
     CaughtStealing = auto()
+    FieldersChoice = auto()
 
 
 @dataclass(init=True)
@@ -115,10 +123,10 @@ def top_of_inning(update: dict, batting_team: TeamInfo) -> Parser:
     ).map(lambda _: InningStart())
 
 
-def batter_up(batting_team: TeamInfo) -> Optional[Parser]:
+def batter_up(batting_team: TeamInfo) -> Parser:
     batter = batting_team.active_batter()
     if batter is None:
-        return None
+        return fail("No batter")
 
     if batter['bat']:
         item_str = f", wielding {batter['bat']}"
@@ -332,12 +340,8 @@ class BaseHit(PitchEvent):
 
 
 class GroundOut(PitchEvent):
-    def __init__(self, inning_ending: bool, runner_on: bool, runner_on_third: bool,
-                 possible_fielders: List[int], batter: dict, pitcher: dict):
+    def __init__(self, batter: dict, pitcher: dict, possible_fielders: List[int]):
         super().__init__(batter, pitcher)
-        self.inning_ending = inning_ending
-        self.runner_on = runner_on
-        self.runner_on_third = runner_on_third
         # Should always be a list of one until we get to late expansion
         self.possible_fielders = possible_fielders
 
@@ -354,12 +358,12 @@ class GroundOut(PitchEvent):
         rng.next()
         fielder = rng.next()
 
-        if not self.inning_ending:
+        if not prev_update['halfInningOuts'] == 2:
             # This is the "runner advance" check
-            if self.runner_on:
+            if prev_update['basesOccupied']:
                 rng.next()
 
-            if self.runner_on_third:
+            if 2 in prev_update['basesOccupied']:
                 rng.next()  # rgsots check??
 
         if int(fielder * 9) not in self.possible_fielders:
@@ -371,6 +375,32 @@ class GroundOut(PitchEvent):
 
         return EventInfo(
             event_type=EventType.HomeRun,
+            strike_zone_val=strike,
+            swing_val=swing,
+            contact_val=contact,
+            foul_val=fair,
+            one_val=one,
+            hit_val=hit,
+            three_val=three,
+            **common
+        )
+
+
+class FieldersChoice(PitchEvent):
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
+        # This line must be first
+        common = self.apply_common(rng, update, prev_update)
+
+        strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "go")
+        contact = rng.next()
+        fair = rng.next()
+        one = rng.next()
+        hit = rng.next()
+        three = rng.next()
+        rng.step(5)  # wow fc long
+
+        return EventInfo(
+            event_type=EventType.FieldersChoice,
             strike_zone_val=strike,
             swing_val=swing,
             contact_val=contact,
@@ -427,12 +457,10 @@ def ball(update: dict, batting_team: TeamInfo,
     ).map(lambda _: Ball(batter=batter, pitcher=pitching_team.pitcher))
 
 
-def home_run(update: dict, batting_team: TeamInfo,
-             pitching_team: TeamInfo) -> Optional[Parser]:
+def home_run(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     batter = batting_team.active_batter()
     if not batter:
-        # Seems like the library is happy to skip None parsers
-        return None
+        return fail("No batter")
 
     if len(update['baseRunners']) == 0:
         hr_type = "solo"
@@ -446,37 +474,29 @@ def home_run(update: dict, batting_team: TeamInfo,
 
 def birds() -> Parser:
     return alt(
-        string("These birds hate Blaseball!")
+        string("These birds hate Blaseball!"),
+        string("I hardly think a few birds are going to bring about the end of the world.")
     ).map(lambda _: Birds())
 
 
-def ground_out(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Optional[Parser]:
+def ground_out(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     batter = batting_team.active_batter()
     if batter is None:
-        return None
-
-    # In the inning-ending event Blaseball resets the outs count to zero. This
-    # is the only way it can be zero during a ground out, because the ground out
-    # event always increments outs.
-    inning_ending = update['halfInningOuts'] == 0
-    runner_on_third = (bool(update['basesOccupied']) and
-                       update['basesOccupied'][-1] == 2)
+        return fail("No batter")
 
     return (
             string(f"{batter['name']} hit a ground out to ") >>
             alt(*[string(fielder['name']) for fielder in pitching_team.lineup])
             << string(".")
-    ).map(lambda name: GroundOut(inning_ending, bool(update['basesOccupied']), runner_on_third,
-                                 [i for i, player in enumerate(pitching_team.lineup)
-                                  if player['name'] == name],
-                                 batter=batter, pitcher=pitching_team.pitcher))
+    ).map(lambda name: GroundOut(batter=batter, pitcher=pitching_team.pitcher,
+                                 possible_fielders=[i for i, f in enumerate(pitching_team.lineup)
+                                                    if f['name'] == name]))
 
 
-def base_hit(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Optional[
-    Parser]:
+def base_hit(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     batter = batting_team.active_batter()
     if batter is None:
-        return None
+        return fail("No batter")
 
     # man the auto-formatter really just doesnt know what to do with this one
     return (
@@ -491,6 +511,42 @@ def base_hit(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo)
                                    bases_occupied=prev_update['basesOccupied'], hit_type=hit_type))
 
 
+def base_name(num: int) -> str:
+    if num == 0:
+        return "first"
+    elif num == 1:
+        return "second"
+    elif num == 2:
+        return "third"
+    elif num == 3:
+        return "fourth"
+
+    raise ValueError("Not a valid base")
+
+
+def fielders_choice(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
+    if prev_update is None or not prev_update['baseRunners']:
+        return fail("Nobody on base")
+    batter = batting_team.active_batter()
+    if batter is None:
+        return fail("No active batter")
+
+    # man the auto-formatter really just doesnt know what to do with this one
+    return (
+            string(f"{batter['name']} reaches on fielder's choice. ") >>
+            alt(*[string(
+                f"{batting_team.batter_by_id(runner)['name']} out at {base_name(base + 1)} base.")
+                  for runner, base
+                  in zip(prev_update['baseRunners'], prev_update['basesOccupied'])])
+            << alt(
+        eof,
+        # I think only one player can score on an FC
+        *[string(f" {batting_team.batter_by_id(runner)['name']} scores") for runner in
+          prev_update['baseRunners']]
+    )
+    ).map(lambda _: FieldersChoice(batter=batter, pitcher=pitching_team.pitcher))
+
+
 def parser(update: dict, prev_update: dict,
            batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     return alt(
@@ -503,8 +559,9 @@ def parser(update: dict, prev_update: dict,
         ball(update, batting_team, pitching_team),
         home_run(update, batting_team, pitching_team),
         strike_swinging(update, batting_team, pitching_team),
-        ground_out(update, batting_team, pitching_team),
+        ground_out(prev_update, batting_team, pitching_team),
         base_hit(prev_update, batting_team, pitching_team),
+        fielders_choice(prev_update, batting_team, pitching_team)
     )
 
 
@@ -514,7 +571,8 @@ def apply_game_update(update: dict, prev_update: dict, rng: Rng, home: TeamInfo,
     prev_update_data = None if prev_update is None else prev_update['data']
     print(update_data['lastUpdate'])
 
-    if update_data['topOfInning']:
+    # Top of inning resets 1 event too quickly
+    if prev_update_data is None or prev_update_data['topOfInning']:
         p = parser(update_data, prev_update_data, away, home)
     else:
         p = parser(update_data, prev_update_data, home, away)

@@ -99,6 +99,7 @@ class EventType(Enum):
     Steal = auto()
     CaughtStealing = auto()
     FieldersChoice = auto()
+    DoublePlay = auto()
 
 
 @dataclass(init=True)
@@ -346,11 +347,24 @@ class HomeRun(PitchEvent):
         )
 
 
+def advance_bases(occupied, amount):
+    occupied = [b + amount for b in occupied]
+    return [b for b in occupied if b < 3]
+
+
 class BaseHit(PitchEvent):
     def __init__(self, batter: dict, pitcher: dict, bases_occupied: List[int], hit_type: str):
         super().__init__(batter, pitcher)
         self.bases_occupied = bases_occupied
         self.hit_type = hit_type
+        if hit_type == "Single":
+            self.hit_bases = 1
+        elif hit_type == "Double":
+            self.hit_bases = 2
+        elif hit_type == "Triple":
+            self.hit_bases = 3
+        else:
+            raise RuntimeError("Unexpected hit type " + hit_type)
 
     def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         # This line must be first
@@ -366,9 +380,24 @@ class BaseHit(PitchEvent):
         five = rng.next()
         six = rng.next()
 
-        # If there's a player on any base but third
-        if any(base < 2 for base in self.bases_occupied):
+        # copied from astrid but what else is new
+        bases = advance_bases(prev_update['basesOccupied'], self.hit_bases)
+        # roll for runner advancement
+        if len(bases) == 1:
             rng.next()
+        elif len(bases) == 2:
+            # guaranteed advancement
+            rng.next()
+
+            # super special edge case for singles only
+            # effectively asking "did anyone score on a single from second"
+            if update['basesOccupied'] != [2, 1, 0]:
+                # ...because after advancing every baserunner (incl second->third)
+                # the runner now on third advanced to home, freeing up third base
+                # for the new, super special, bonus advancement roll from second->third
+                rng.next()
+
+            # i'm sure there's a fun way to do this for 3+ bases but, lol, lmao
 
         return EventInfo(
             event_type=EventType.HomeRun,
@@ -519,6 +548,39 @@ class FieldersChoice(PitchEvent):
         )
 
 
+class DoublePlay(PitchEvent):
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
+        # This line must be first
+        common = self.apply_common(rng, update, prev_update)
+
+        strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "go")
+        contact = rng.next()
+        fair = rng.next()
+        one = rng.next()
+        hit = rng.next()
+        three = rng.next()
+        four = rng.next()
+        five = rng.next()
+        six = rng.next()
+        zeven = rng.next()
+
+        return EventInfo(
+            event_type=EventType.DoublePlay,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
+            contact_roll=contact,
+            foul_roll=fair,
+            unknown_roll_1=one,
+            hit_or_out_roll=hit,
+            unknown_roll_2=three,
+            unknown_roll_3=four,
+            unknown_roll_4=five,
+            unknown_roll_5=six,
+            unknown_roll_6=zeven,
+            **common
+        )
+
+
 class Steal(Event):
     def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         weather_roll = weather_check(rng, update['weather'])
@@ -529,6 +591,27 @@ class Steal(Event):
 
         return EventInfo(
             event_type=EventType.Steal,
+            weather_roll=weather_roll,
+            mystery_roll=mystery,
+            has_runner=True,
+            should_try_to_steal_roll=steal_roll,
+            pitcher={k: self.pitcher.get(k, None) for k in ATTRIBUTES},
+            thief={k: self.batter.get(k, None) for k in ATTRIBUTES},
+        )
+
+
+class CaughtStealing(Event):
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
+        weather_roll = weather_check(rng, update['weather'])
+        mystery = rng.next()
+
+        steal_roll = rng.next()
+        rng.next()  # steal success
+        rng.next()  # ???
+        rng.next()  # ???
+
+        return EventInfo(
+            event_type=EventType.CaughtStealing,
             weather_roll=weather_roll,
             mystery_roll=mystery,
             has_runner=True,
@@ -596,15 +679,15 @@ def ball(update: dict, batting_team: TeamInfo,
     ).map(lambda _: Ball(batter=batter, pitcher=pitching_team.pitcher))
 
 
-def home_run(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
+def home_run(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     batter = batting_team.active_batter()
     if not batter:
         return fail("No batter")
 
-    if len(update['baseRunners']) == 0:
+    if len(prev_update['baseRunners']) == 0:
         hr_type = "solo"
     else:
-        hr_type = str(len(update['baseRunners']) + 1) + "-run"
+        hr_type = str(len(prev_update['baseRunners']) + 1) + "-run"
 
     return string(
         f"{batter['name']} hits a {hr_type} home run!"
@@ -711,9 +794,21 @@ def fielders_choice(prev_update: dict, batting_team: TeamInfo, pitching_team: Te
                                        score=score is not None))
 
 
-def steal_helper(batting_team: TeamInfo, runner_id: str, base: int) -> Parser:
+def double_play(batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
+    batter = batting_team.active_batter()
+    if batter is None:
+        return fail("No active batter")
+
+    # man the auto-formatter really just doesnt know what to do with this one
+    return string(
+        f"{batter['name']} hit into a double play!"
+    ).map(lambda _: DoublePlay(batter=batter, pitcher=pitching_team.pitcher))
+
+
+def steal_helper(batting_team: TeamInfo, runner_id: str, base: int, intertext: str,
+                 punct: str) -> Parser:
     runner = batting_team.batter_by_id(runner_id)
-    return string(f"{runner['name']} steals {base_name(base + 1)} base!").result(runner)
+    return string(f"{runner['name']}{intertext}{base_name(base + 1)} base{punct}").result(runner)
 
 
 def steal(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
@@ -721,10 +816,21 @@ def steal(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) ->
         return fail("Can't steal before the game starts")
 
     return alt(*[
-        steal_helper(batting_team, runner, base)
+        steal_helper(batting_team, runner, base, " steals ", "!")
         for runner, base in zip(prev_update['baseRunners'], prev_update['basesOccupied'])
         # Pretend the thief is the batter
     ]).map(lambda thief: Steal(batter=thief, pitcher=pitching_team.pitcher))
+
+
+def caught_stealing(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
+    if prev_update is None:
+        return fail("Can't get caught stealing before the game starts")
+
+    return alt(*[
+        steal_helper(batting_team, runner, base, " gets caught stealing ", ".")
+        for runner, base in zip(prev_update['baseRunners'], prev_update['basesOccupied'])
+        # Pretend the thief is the batter
+    ]).map(lambda thief: CaughtStealing(batter=thief, pitcher=pitching_team.pitcher))
 
 
 def parser(update: dict, prev_update: dict,
@@ -737,13 +843,15 @@ def parser(update: dict, prev_update: dict,
         foul_ball(update, batting_team, pitching_team),
         birds(),
         ball(update, batting_team, pitching_team),
-        home_run(update, batting_team, pitching_team),
+        home_run(prev_update, batting_team, pitching_team),
         strike_swinging(update, batting_team, pitching_team),
         ground_out(batting_team, pitching_team),
         base_hit(prev_update, batting_team, pitching_team),
         fielders_choice(prev_update, batting_team, pitching_team),
         flyout(batting_team, pitching_team),
         steal(prev_update, batting_team, pitching_team),
+        caught_stealing(prev_update, batting_team, pitching_team),
+        double_play(batting_team, pitching_team),
         string("Game over.").map(lambda _: GameOver()),
     )
 
@@ -791,6 +899,12 @@ def game_generator(game_id) -> GameGenerator:
         if update["data"]["_id"] == "ad3f8b4a-7914-b7cb-17cb-e5f52929db8c":
             game_rng.step(1)
 
+        # There's a missing event here and by counting the rolls it seems to be a foul with a
+        # basestealing check (7 rolls). TODO Restructure the code so I can insert a deduced event
+        if update["hash"] == "50140ef4-ef62-dbd6-8b52-937fc8d4002e":
+            print("Advancing past deduced foul", update["data"]["_id"])
+            game_rng.step(7)
+
         # Must persist active batter because sometimes it goes away while we
         # still need it (e.g. home runs)
         if update["data"]["awayBatter"]:
@@ -809,10 +923,12 @@ def game_generator(game_id) -> GameGenerator:
 
 
 def main():
-    game_rng = Rng((2009851709471025379, 7904764474545764681), 8)
+    # game_rng = Rng((2009851709471025379, 7904764474545764681), 8)
+    game_rng = Rng((16992747869295392778, 489180923418420395), 38)
     game_rng.step(-1)
 
-    games = [game_generator('ea55d541-1abe-4a02-8cd8-f62d1392226b')]
+    # games = [game_generator('ea55d541-1abe-4a02-8cd8-f62d1392226b')]
+    games = [game_generator('731e7e33-4cd3-47de-b9fe-850d7131c4d6')]
 
     # Start all the generators
     for game in games:

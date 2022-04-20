@@ -524,12 +524,6 @@ class FieldersChoice(PitchEvent):
         six = rng.next()
         zeven = rng.next()
 
-        # On second thought it is impossible for this to be how it works. Regardless, it makes the
-        # rolls line up for now
-        if self.score:
-            eight = rng.next()
-        else:
-            eight = None
 
         return EventInfo(
             event_type=EventType.FieldersChoice,
@@ -544,7 +538,6 @@ class FieldersChoice(PitchEvent):
             unknown_roll_4=five,
             unknown_roll_5=six,
             unknown_roll_6=zeven,
-            unknown_roll_7=eight,
             **common
         )
 
@@ -842,7 +835,8 @@ def double_play(batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     ).map(lambda _: DoublePlay(batter=batter, pitcher=pitching_team.pitcher))
 
 
-def sacrifice(prev_update: Optional[dict], batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
+def sacrifice(prev_update: Optional[dict], batting_team: TeamInfo,
+              pitching_team: TeamInfo) -> Parser:
     if prev_update is None:
         return fail("Can't score on a sacrifice before the game starts")
     if not prev_update['baseRunners']:
@@ -949,7 +943,7 @@ def game_generator(game_id) -> GameGenerator:
         game_rng = yield
 
         # We don't know why these offsets are required
-        if update["data"]["_id"] == "ad3f8b4a-7914-b7cb-17cb-e5f52929db8c":
+        if update["data"].get("_id", None) == "ad3f8b4a-7914-b7cb-17cb-e5f52929db8c":
             game_rng.step(1)
 
         # There's a missing event here and by counting the rolls it seems to be a foul with a
@@ -976,12 +970,22 @@ def game_generator(game_id) -> GameGenerator:
 
 
 def main():
-    # game_rng = Rng((2009851709471025379, 7904764474545764681), 8)
-    game_rng = Rng((16992747869295392778, 489180923418420395), 38)
+    days = [
+        (((2009851709471025379, 7904764474545764681), 8), ['ea55d541-1abe-4a02-8cd8-f62d1392226b']),
+        (((16992747869295392778, 489180923418420395), 38), ['731e7e33-4cd3-47de-b9fe-850d7131c4d6']),
+        (((12352002204426442393, 16214116944942565884), 48), ['b38e0917-43da-470c-a7bb-5712368a2492']),
+    ]
+
+    for i, (rng_start, game_id) in enumerate(days):
+        print(f"Starting {i+1}th game")
+        run_day(rng_start, game_id)
+
+
+def run_day(rng_start, game_ids):
+    game_rng = Rng(*rng_start)
     game_rng.step(-1)
 
-    # games = [game_generator('ea55d541-1abe-4a02-8cd8-f62d1392226b')]
-    games = [game_generator('731e7e33-4cd3-47de-b9fe-850d7131c4d6')]
+    games = [game_generator(game_id) for game_id in game_ids]
 
     # Start all the generators
     for game in games:
@@ -998,6 +1002,9 @@ def main():
     while games:
         # Advance the game and remove it from the list when it's finished
         games[:] = [game for game in games if advance_game(game)]
+
+    game_rng.step(3)
+    print("Next day start state should be", game_rng.get_state_str())
 
 
 def chron_get_lineup(timestamp: str, team: dict):

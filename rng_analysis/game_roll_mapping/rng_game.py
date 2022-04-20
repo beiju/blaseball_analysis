@@ -1,3 +1,4 @@
+import math
 from abc import ABC
 from dataclasses import dataclass, field, asdict
 from enum import Enum, auto
@@ -44,7 +45,8 @@ ATTRIBUTES = [
     "anticapitalism",
     "chasiness",
     "pressurization",
-    "cinnamon"
+    "cinnamon",
+    "vibes"  # fake attribute from calculating vibes per day
 ]
 
 
@@ -524,7 +526,6 @@ class FieldersChoice(PitchEvent):
         six = rng.next()
         zeven = rng.next()
 
-
         return EventInfo(
             event_type=EventType.FieldersChoice,
             pitch_in_strike_zone_roll=strike,
@@ -921,6 +922,20 @@ def apply_game_update(update: dict, prev_update: dict, rng: Rng, home: TeamInfo,
 GameGenerator = Generator[None, Rng, None]
 
 
+def vibes(player, day):
+    frequency = 6 + round(10 * player['buoyancy'])
+    phase = math.pi * ((2 / frequency) * day + 0.5)
+
+    range = 0.5 * (player['pressurization'] + player['cinnamon'])
+    return (range * math.sin(phase)) - (0.5 * player['pressurization']) + (0.5 * player['cinnamon'])
+
+
+def init_vibes(team: TeamInfo, day: int):
+    team.pitcher['vibes'] = vibes(team.pitcher, day)
+    for batter in team.lineup:
+        batter['vibes'] = vibes(batter, day)
+
+
 def game_generator(game_id) -> GameGenerator:
     game_updates = chronicler.get_game_updates(
         game_ids=game_id,
@@ -935,6 +950,9 @@ def game_generator(game_id) -> GameGenerator:
                     lineup=home_lineup)
     away = TeamInfo(team=away_team, pitcher=away_pitcher,
                     lineup=away_lineup)
+
+    init_vibes(home, game_updates[0]['data']['day'])
+    init_vibes(away, game_updates[0]['data']['day'])
 
     data_rows = []
     prev_update = None
@@ -972,12 +990,14 @@ def game_generator(game_id) -> GameGenerator:
 def main():
     days = [
         (((2009851709471025379, 7904764474545764681), 8), ['ea55d541-1abe-4a02-8cd8-f62d1392226b']),
-        (((16992747869295392778, 489180923418420395), 38), ['731e7e33-4cd3-47de-b9fe-850d7131c4d6']),
-        (((12352002204426442393, 16214116944942565884), 48), ['b38e0917-43da-470c-a7bb-5712368a2492']),
+        (
+        ((16992747869295392778, 489180923418420395), 38), ['731e7e33-4cd3-47de-b9fe-850d7131c4d6']),
+        (((12352002204426442393, 16214116944942565884), 48),
+         ['b38e0917-43da-470c-a7bb-5712368a2492']),
     ]
 
     for i, (rng_start, game_id) in enumerate(days):
-        print(f"Starting {i+1}th game")
+        print(f"Starting {i + 1}th game")
         run_day(rng_start, game_id)
 
 

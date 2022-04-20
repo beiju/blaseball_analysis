@@ -1243,7 +1243,7 @@ gdata = data.groupby('event_type')
 for key, group in gdata:
     if key in {"StrikeLooking", "StrikeSwinging", "Ball", "Foul"}:
         # (group['pitcher_ruth'] == data.iloc[0]['pitcher_ruth']) &
-        plot_group = group[(group['strike_zone_val'] < 0.35 + group['pitcher_ruth'] * 0.35)]  #[group['strike_zone_val'] < 0.35 + group['pitcher_ruth'] * 0.35]
-        plot_group.plot(ax=ax, kind='scatter', x='batter_path', y='swing_val', label=key, color=color_map[key])
+        plot_group = group[(group['pitch_in_strike_zone_roll'] < 0.35 + group['pitcher_ruth'] * 0.35)]  #[group['pitch_in_strike_zone_roll'] < 0.35 + group['pitcher_ruth'] * 0.35]
+        plot_group.plot(ax=ax, kind='scatter', x='batter_path', y='batter_swings_roll', label=key, color=color_map[key])
 
 plt.savefig("output.png")

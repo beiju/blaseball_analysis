@@ -1,5 +1,5 @@
 from abc import ABC
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from enum import Enum, auto
 from typing import List, Optional
 
@@ -17,6 +17,35 @@ BIRDS_WEATHER = 11
 session = requests_cache.CachedSession("blaseball-mike-cache",
                                        backend="sqlite", expire_after=None)
 _SESSIONS_BY_EXPIRY[None] = session
+
+ATTRIBUTES = [
+    "thwackability",
+    "moxie",
+    "divinity",
+    "musclitude",
+    "patheticism",
+    "buoyancy",
+    "baseThirst",
+    "laserlikeness",
+    "groundFriction",
+    "continuation",
+    "indulgence",
+    "martyrdom",
+    "tragicness",
+    "shakespearianism",
+    "suppression",
+    "unthwackability",
+    "coldness",
+    "overpowerment",
+    "ruthlessness",
+    "omniscience",
+    "tenaciousness",
+    "watchfulness",
+    "anticapitalism",
+    "chasiness",
+    "pressurization",
+    "cinnamon"
+]
 
 
 def chron_get_by_key(type_: str, first_update: dict, key: str):
@@ -75,20 +104,30 @@ class EventType(Enum):
 @dataclass(init=True)
 class EventInfo:
     event_type: EventType
-    weather_val: float
+    weather_roll: float
     has_runner: bool = field(default=False)
-    mystery_val: Optional[float] = field(default=None)
-    steal_val: Optional[float] = field(default=None)
-    strike_zone_val: Optional[float] = field(default=None)
-    pitcher_ruth: Optional[float] = field(default=None)
-    swing_val: Optional[float] = field(default=None)
-    batter_path: Optional[float] = field(default=None)
-    batter_moxie: Optional[float] = field(default=None)
-    contact_val: Optional[float] = field(default=None)
-    foul_val: Optional[float] = field(default=None)
-    one_val: Optional[float] = field(default=None)
-    hit_val: Optional[float] = field(default=None)
-    three_val: Optional[float] = field(default=None)
+    mystery_roll: Optional[float] = field(default=None)
+    should_try_to_steal_roll: Optional[float] = field(default=None)
+    pitch_in_strike_zone_roll: Optional[float] = field(default=None)
+    batter_swings_roll: Optional[float] = field(default=None)
+    contact_roll: Optional[float] = field(default=None)
+    foul_roll: Optional[float] = field(default=None)
+    unknown_roll_1: Optional[float] = field(default=None)
+    hit_or_out_roll: Optional[float] = field(default=None)
+    unknown_roll_2: Optional[float] = field(default=None)
+    unknown_roll_3: Optional[float] = field(default=None)
+    unknown_roll_4: Optional[float] = field(default=None)
+    unknown_roll_5: Optional[float] = field(default=None)
+    unknown_roll_6: Optional[float] = field(default=None)
+    unknown_roll_7: Optional[float] = field(default=None)
+    fielder_selection_roll: Optional[float] = field(default=None)
+    unknown_after_fielder_selection_roll: Optional[float] = field(default=None)
+    bird_number_roll: Optional[float] = field(default=None)
+    bird_message_roll: Optional[float] = field(default=None)
+
+    batter: Optional[dict] = field(default=None)
+    pitcher: Optional[dict] = field(default=None)
+    thief: Optional[dict] = field(default=None)
 
 
 class Event(ABC):
@@ -196,18 +235,17 @@ class PitchEvent(Event, ABC):
         mystery = rng.next()
 
         if prev_update['baseRunners']:
-            steal = runner_check(rng)
+            should_steal = runner_check(rng)
         else:
-            steal = None
+            should_steal = None
 
         return dict(
-            weather_val=weather_roll,
-            mystery_val=mystery,
+            weather_roll=weather_roll,
+            mystery_roll=mystery,
             has_runner=bool(update['baseRunners']),
-            steal_val=steal,
-            pitcher_ruth=self.pitcher["ruthlessness"],
-            batter_path=self.batter["patheticism"],
-            batter_moxie=self.batter["moxie"],
+            should_try_to_steal_roll=should_steal,
+            pitcher={k: self.pitcher.get(k, None) for k in ATTRIBUTES},
+            batter={k: self.batter.get(k, None) for k in ATTRIBUTES},
         )
 
 
@@ -219,8 +257,8 @@ class StrikeLooking(PitchEvent):
 
         return EventInfo(
             event_type=EventType.StrikeLooking,
-            strike_zone_val=strike,
-            swing_val=swing,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
             **common
         )
 
@@ -244,10 +282,10 @@ class FoulBall(PitchEvent):
 
         return EventInfo(
             event_type=EventType.Foul,
-            strike_zone_val=strike,
-            swing_val=swing,
-            contact_val=contact,
-            foul_val=fair,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
+            contact_roll=contact,
+            foul_roll=fair,
             **common
         )
 
@@ -261,9 +299,9 @@ class StrikeSwinging(PitchEvent):
 
         return EventInfo(
             event_type=EventType.StrikeSwinging,
-            strike_zone_val=strike,
-            swing_val=swing,
-            contact_val=contact,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
+            contact_roll=contact,
             **common
         )
 
@@ -277,8 +315,8 @@ class Ball(PitchEvent):
 
         return EventInfo(
             event_type=EventType.Ball,
-            strike_zone_val=strike,
-            swing_val=swing,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
             **common
         )
 
@@ -293,16 +331,17 @@ class HomeRun(PitchEvent):
         fair = rng.next()
         one = rng.next()
         hit = rng.next()
-        rng.next()
+        three = rng.next()
 
         return EventInfo(
             event_type=EventType.HomeRun,
-            strike_zone_val=strike,
-            swing_val=swing,
-            contact_val=contact,
-            foul_val=fair,
-            one_val=one,
-            hit_val=hit,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
+            contact_roll=contact,
+            foul_roll=fair,
+            unknown_roll_1=one,
+            hit_or_out_roll=hit,
+            unknown_roll_2=three,
             **common
         )
 
@@ -323,9 +362,9 @@ class BaseHit(PitchEvent):
         one = rng.next()
         hit = rng.next()
         three = rng.next()
-        r2 = rng.next()
-        r1 = rng.next()
-        last = rng.next()
+        four = rng.next()
+        five = rng.next()
+        six = rng.next()
 
         # If there's a player on any base but third
         if any(base < 2 for base in self.bases_occupied):
@@ -333,13 +372,16 @@ class BaseHit(PitchEvent):
 
         return EventInfo(
             event_type=EventType.HomeRun,
-            strike_zone_val=strike,
-            swing_val=swing,
-            contact_val=contact,
-            foul_val=fair,
-            one_val=one,
-            hit_val=hit,
-            three_val=three,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
+            contact_roll=contact,
+            foul_roll=fair,
+            unknown_roll_1=one,
+            hit_or_out_roll=hit,
+            unknown_roll_2=three,
+            unknown_roll_3=four,
+            unknown_roll_4=five,
+            unknown_roll_5=six,
             **common
         )
 
@@ -370,7 +412,7 @@ class GroundOut(FieldingOutEvent):
         one = rng.next()
         hit = rng.next()
         three = rng.next()
-        rng.next()
+        four = rng.next()
         fielder = rng.next()
 
         if not prev_update['halfInningOuts'] == 2:
@@ -385,13 +427,15 @@ class GroundOut(FieldingOutEvent):
 
         return EventInfo(
             event_type=EventType.HomeRun,
-            strike_zone_val=strike,
-            swing_val=swing,
-            contact_val=contact,
-            foul_val=fair,
-            one_val=one,
-            hit_val=hit,
-            three_val=three,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
+            contact_roll=contact,
+            foul_roll=fair,
+            unknown_roll_1=one,
+            hit_or_out_roll=hit,
+            unknown_roll_2=three,
+            unknown_roll_3=four,
+            fielder_selection_roll=fielder,
             **common
         )
 
@@ -407,7 +451,7 @@ class Flyout(FieldingOutEvent):
         one = rng.next()
         hit = rng.next()
         fielder = rng.next()
-        rng.next()  # not gonna call this three bc it's after the fielder roll
+        postfielder = rng.next()  # not gonna call this three bc it's after the fielder roll
 
         if not prev_update['halfInningOuts'] == 2:
             # This is the "runner advance" check
@@ -418,12 +462,14 @@ class Flyout(FieldingOutEvent):
 
         return EventInfo(
             event_type=EventType.HomeRun,
-            strike_zone_val=strike,
-            swing_val=swing,
-            contact_val=contact,
-            foul_val=fair,
-            one_val=one,
-            hit_val=hit,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
+            contact_roll=contact,
+            foul_roll=fair,
+            unknown_roll_1=one,
+            hit_or_out_roll=hit,
+            fielder_selection_roll=fielder,
+            unknown_after_fielder_selection_roll=postfielder,
             **common
         )
 
@@ -443,22 +489,32 @@ class FieldersChoice(PitchEvent):
         one = rng.next()
         hit = rng.next()
         three = rng.next()
-        rng.step(4)  # wow fc long
+        four = rng.next()
+        five = rng.next()
+        six = rng.next()
+        zeven = rng.next()
 
         # On second thought it is impossible for this to be how it works. Regardless, it makes the
         # rolls line up for now
         if self.score:
-            rng.next()
+            eight = rng.next()
+        else:
+            eight = None
 
         return EventInfo(
             event_type=EventType.FieldersChoice,
-            strike_zone_val=strike,
-            swing_val=swing,
-            contact_val=contact,
-            foul_val=fair,
-            one_val=one,
-            hit_val=hit,
-            three_val=three,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
+            contact_roll=contact,
+            foul_roll=fair,
+            unknown_roll_1=one,
+            hit_or_out_roll=hit,
+            unknown_roll_2=three,
+            unknown_roll_3=four,
+            unknown_roll_4=five,
+            unknown_roll_5=six,
+            unknown_roll_6=zeven,
+            unknown_roll_7=eight,
             **common
         )
 
@@ -473,13 +529,12 @@ class Steal(Event):
 
         return EventInfo(
             event_type=EventType.Steal,
-            weather_val=weather_roll,
-            mystery_val=mystery,
+            weather_roll=weather_roll,
+            mystery_roll=mystery,
             has_runner=True,
-            steal_val=steal_roll,
-            pitcher_ruth=self.pitcher["ruthlessness"],
-            batter_path=self.batter["patheticism"],
-            batter_moxie=self.batter["moxie"],
+            should_try_to_steal_roll=steal_roll,
+            pitcher={k: self.pitcher.get(k, None) for k in ATTRIBUTES},
+            thief={k: self.batter.get(k, None) for k in ATTRIBUTES},
         )
 
 
@@ -487,11 +542,13 @@ class Birds(Event):
     def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         weather_roll = weather_check(rng, update['weather'], True)
         # TODO Check bird message index and number
-        rng.next()
-        rng.next()
+        bird_number_roll = rng.next()
+        bird_message_roll = rng.next()
         return EventInfo(
             event_type=EventType.Weather,
-            weather_val=weather_roll
+            weather_roll=weather_roll,
+            bird_number_roll=bird_number_roll,
+            bird_message_roll=bird_message_roll
         )
 
 
@@ -745,7 +802,8 @@ def main():
 
         prev_update = update
 
-    pd.DataFrame(data_rows).to_csv(f"game_{game_id}.csv")
+    df = pd.json_normalize([asdict(obj) for obj in data_rows])
+    df.to_csv(f"game_{game_id}.csv")
 
 
 def chron_get_lineup(timestamp: str, team: dict):

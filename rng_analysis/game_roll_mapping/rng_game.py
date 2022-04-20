@@ -523,7 +523,20 @@ def home_run(update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> P
 def birds() -> Parser:
     return alt(
         string("These birds hate Blaseball!"),
-        string("I hardly think a few birds are going to bring about the end of the world.")
+        string("I hardly think a few birds are going to bring about the end of the world."),
+        string("Don't feed the birds"),
+        string("The birds are after the children..."),
+        string("Do these birds have souls?"),
+        string("They're clearing feathers off the field..."),
+        string("Where did these birds come from?"),
+        string("Have you ever seen this many birds?"),
+        string("BIRD NOISES"),
+        string("What are we gonna do with all these birds?"),
+        string("The birds are mad at you. You specifically. You know who you are."),
+        string("Several birds are pecking..."),
+        string("This is too many birds."),
+        string("The birds are very loud!"),
+        regex(r"\d{1,4}").map(int) << string(" Birds")
     ).map(lambda _: Birds())
 
 

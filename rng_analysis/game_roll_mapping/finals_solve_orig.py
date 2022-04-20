@@ -19,6 +19,7 @@ def weather_check(weather):
     roll = r.next()
     if weather == "birds" and (roll < 0.05) != weather:
         print("ERROR @ {}: WRONG BIRDS".format(r.get_state_str()))
+    return roll
 
 
 def swing_threshold(batter_moxie):
@@ -111,7 +112,7 @@ def foul(pitcher, batter, runner=False):
 def ground_out(
     pitcher, batter, out_to, runner=False, inning_ending=False, is_on_third=False
 ):
-    weather_check(False)
+    w = weather_check(False)
     r.next()
     runner_check(runner)
     strike_swing_check(pitcher, batter, "go")

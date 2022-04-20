@@ -7,7 +7,7 @@ import pandas as pd
 import requests_cache
 from blaseball_mike import chronicler
 from blaseball_mike.session import _SESSIONS_BY_EXPIRY
-from parsy import string, Parser, alt, eof, fail
+from parsy import string, Parser, alt, eof, fail, regex
 
 from nd.rng import Rng
 
@@ -112,6 +112,11 @@ class InningStart(Event):
 
 
 class BatterUp(Event):
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
+        return None
+
+
+class GameOver(Event):
     def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         return None
 
@@ -424,6 +429,10 @@ class Flyout(FieldingOutEvent):
 
 
 class FieldersChoice(PitchEvent):
+    def __init__(self, batter: dict, pitcher: dict, score: bool):
+        super().__init__(batter, pitcher)
+        self.score = score
+
     def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         # This line must be first
         common = self.apply_common(rng, update, prev_update)
@@ -434,7 +443,12 @@ class FieldersChoice(PitchEvent):
         one = rng.next()
         hit = rng.next()
         three = rng.next()
-        rng.step(5)  # wow fc long
+        rng.step(4)  # wow fc long
+
+        # On second thought it is impossible for this to be how it works. Regardless, it makes the
+        # rolls line up for now
+        if self.score:
+            rng.next()
 
         return EventInfo(
             event_type=EventType.FieldersChoice,
@@ -446,6 +460,26 @@ class FieldersChoice(PitchEvent):
             hit_val=hit,
             three_val=three,
             **common
+        )
+
+
+class Steal(Event):
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
+        weather_roll = weather_check(rng, update['weather'])
+        mystery = rng.next()
+
+        steal_roll = rng.next()
+        rng.next()  # steal success
+
+        return EventInfo(
+            event_type=EventType.Steal,
+            weather_val=weather_roll,
+            mystery_val=mystery,
+            has_runner=True,
+            steal_val=steal_roll,
+            pitcher_ruth=self.pitcher["ruthlessness"],
+            batter_path=self.batter["patheticism"],
+            batter_moxie=self.batter["moxie"],
         )
 
 
@@ -612,14 +646,28 @@ def fielders_choice(prev_update: dict, batting_team: TeamInfo, pitching_team: Te
             alt(*[string(
                 f"{batting_team.batter_by_id(runner)['name']} out at {base_name(base + 1)} base.")
                 for runner, base
-                in zip(prev_update['baseRunners'], prev_update['basesOccupied'])])
-            << alt(
-        eof,
-        # I think only one player can score on an FC
-        *[string(f" {batting_team.batter_by_id(runner)['name']} scores") for runner in
-          prev_update['baseRunners']]
-    )
-    ).map(lambda _: FieldersChoice(batter=batter, pitcher=pitching_team.pitcher))
+                in zip(prev_update['baseRunners'], prev_update['basesOccupied'])]) >>
+            # I think only one player can score on an FC
+            alt(*[string(f" {batting_team.batter_by_id(runner)['name']} scores")
+                  for runner in prev_update['baseRunners']]).optional()
+    ).map(lambda score: FieldersChoice(batter=batter, pitcher=pitching_team.pitcher,
+                                       score=score is not None))
+
+
+def steal_helper(batting_team: TeamInfo, runner_id: str, base: int) -> Parser:
+    runner = batting_team.batter_by_id(runner_id)
+    return string(f"{runner['name']} steals {base_name(base + 1)} base!").result(runner)
+
+
+def steal(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
+    if prev_update is None:
+        return fail("Can't steal before the game starts")
+
+    return alt(*[
+        steal_helper(batting_team, runner, base)
+        for runner, base in zip(prev_update['baseRunners'], prev_update['basesOccupied'])
+        # Pretend the thief is the batter
+    ]).map(lambda thief: Steal(batter=thief, pitcher=pitching_team.pitcher))
 
 
 def parser(update: dict, prev_update: dict,
@@ -637,7 +685,9 @@ def parser(update: dict, prev_update: dict,
         ground_out(batting_team, pitching_team),
         base_hit(prev_update, batting_team, pitching_team),
         fielders_choice(prev_update, batting_team, pitching_team),
-        flyout(batting_team, pitching_team)
+        flyout(batting_team, pitching_team),
+        steal(prev_update, batting_team, pitching_team),
+        string("Game over.").map(lambda _: GameOver()),
     )
 
 

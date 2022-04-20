@@ -8,7 +8,7 @@ import pandas as pd
 import requests_cache
 from blaseball_mike import chronicler
 from blaseball_mike.session import _SESSIONS_BY_EXPIRY
-from parsy import string, Parser, alt, eof, fail, regex
+from parsy import string, Parser, alt, eof, fail, regex, seq
 
 from nd.rng import Rng
 
@@ -108,6 +108,11 @@ class TeamInfo:
                 return batter
 
         raise ValueError("Batter not found")
+
+    def team_id(self):
+        if '_id' in self.team:
+            return self.team['_id']
+        return self.team['id']
 
 
 class EventType(Enum):
@@ -766,7 +771,7 @@ def birds() -> Parser:
         string("The birds are paralyzed! They can't move!"),
         string("The birds continue to stare."),
         regex(r"\d{1,4}").map(int) << string(" Birds")
-    ).map(lambda _: Birds())
+    ).desc("Birds").map(lambda _: Birds())
 
 
 def ground_out(batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
@@ -905,6 +910,58 @@ def caught_stealing(prev_update: dict, batting_team: TeamInfo, pitching_team: Te
     ]).map(lambda thief: CaughtStealing(batter=thief, pitcher=pitching_team.pitcher))
 
 
+class Incineration(Event):
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
+        incin_roll = rng.next()
+        if incin_roll > 0.001:
+            print("ERROR: incin roll too high?")
+        # name, stats, info, location
+        rng.step(2 + 26 + 3 + 2)
+
+        return EventInfo(
+            event_type=EventType.Weather,
+            weather_roll=incin_roll,
+        )
+
+
+def apply_incineration(victim_team: TeamInfo, timestamp: str,
+                       victim_name: str, replacement_name: str) -> Incineration:
+    slot = next(i for i, p in enumerate(victim_team.lineup) if p['name'] == victim_name)
+    victim_id = victim_team.lineup[slot]['_id']
+    next_versions = chronicler.v2.get_versions(
+        type_="team",
+        id_=victim_team.team_id(),
+        after=timestamp,
+        count=10,  # Just in case it doesn't update right away
+        cache_time=None,
+    )
+    new_player_id = next(version['data']['lineup'][slot] for version in next_versions
+                         if version['data']['lineup'][slot] != victim_id)
+    # Get first version for this player
+    new_player = next(chronicler.v2.get_versions(
+        type_="player",
+        id_=new_player_id,
+        count=1,
+        order="asc",
+        cache_time=None,
+    ))["data"]
+    assert new_player["name"] == replacement_name
+    victim_team.lineup[slot] = new_player
+
+    return Incineration()
+
+
+def incineration(update: dict, pitching_team: TeamInfo) -> Parser:
+    # At this point in the game only the fielding team can be incinerated
+    # Eventually I'll need to add pitcher incins
+    return seq(
+        string(f"Rogue Umpire incinerated {pitching_team.team['nickname']} hitter ") >>
+        alt(*[string(player['name']) for player in pitching_team.lineup])
+        << string("! Replaced by "),
+        regex(".*$")
+    ).map(lambda res: apply_incineration(pitching_team, update["timestamp"], res[0], res[1]))
+
+
 def parser(update: dict, prev_update: Optional[dict],
            batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     return alt(
@@ -926,12 +983,14 @@ def parser(update: dict, prev_update: Optional[dict],
         double_play(batting_team, pitching_team),
         sacrifice(prev_update, batting_team, pitching_team),
         string("Game over.").map(lambda _: GameOver()),
+        incineration(update, pitching_team),
     )
 
 
 def apply_game_update(update: dict, prev_update: dict, rng: Rng, home: TeamInfo,
                       away: TeamInfo) -> Optional[EventInfo]:
     update_data = update['data']
+    update_data["timestamp"] = update["timestamp"]
     prev_update_data = None if prev_update is None else prev_update['data']
     print(update_data['lastUpdate'])
 
@@ -961,7 +1020,8 @@ def init_vibes(team: TeamInfo, day: int):
         batter['vibes'] = vibes(batter, day)
 
 
-def game_generator(game_id, start_time: Optional[str], pull_data_at: Optional[str]) -> GameGenerator:
+def game_generator(game_id, start_time: Optional[str],
+                   pull_data_at: Optional[str]) -> GameGenerator:
     game_updates = chronicler.get_game_updates(
         game_ids=game_id,
         after=start_time,
@@ -971,7 +1031,8 @@ def game_generator(game_id, start_time: Optional[str], pull_data_at: Optional[st
         pull_data_at = game_updates[0]['timestamp']
 
     home_team, away_team = chron_get_by_key("team", game_updates[0], pull_data_at, "Team")
-    home_pitcher, away_pitcher = chron_get_by_key("player", game_updates[0], pull_data_at, "Pitcher")
+    home_pitcher, away_pitcher = chron_get_by_key("player", game_updates[0], pull_data_at,
+                                                  "Pitcher")
     home_lineup = chron_get_lineup(pull_data_at, home_team)
     away_lineup = chron_get_lineup(pull_data_at, away_team)
 

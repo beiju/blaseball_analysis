@@ -1,7 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass, field, asdict
 from enum import Enum, auto
-from typing import List, Optional
+from typing import List, Optional, Generator
 
 import pandas as pd
 import requests_cache
@@ -763,11 +763,10 @@ def apply_game_update(update: dict, prev_update: dict, rng: Rng, home: TeamInfo,
     return p.parse(update_data['lastUpdate']).apply(rng, update_data, prev_update_data)
 
 
-def main():
-    game_id = 'ea55d541-1abe-4a02-8cd8-f62d1392226b'
+GameGenerator = Generator[None, Rng, None]
 
-    game_rng = Rng((2009851709471025379, 7904764474545764681), 8)
-    game_rng.step(-1)
+
+def game_generator(game_id) -> GameGenerator:
     game_updates = chronicler.get_game_updates(
         game_ids=game_id,
         cache_time=None
@@ -785,6 +784,9 @@ def main():
     data_rows = []
     prev_update = None
     for update in game_updates:
+        # This is a fun inversion
+        game_rng = yield
+
         # We don't know why these offsets are required
         if update["data"]["_id"] == "ad3f8b4a-7914-b7cb-17cb-e5f52929db8c":
             game_rng.step(1)
@@ -804,6 +806,29 @@ def main():
 
     df = pd.json_normalize([asdict(obj) for obj in data_rows])
     df.to_csv(f"game_{game_id}.csv")
+
+
+def main():
+    game_rng = Rng((2009851709471025379, 7904764474545764681), 8)
+    game_rng.step(-1)
+
+    games = [game_generator('ea55d541-1abe-4a02-8cd8-f62d1392226b')]
+
+    # Start all the generators
+    for game in games:
+        next(game)
+
+    def advance_game(g: GameGenerator) -> bool:
+        try:
+            g.send(game_rng)
+        except StopIteration:
+            return False
+
+        return True
+
+    while games:
+        # Advance the game and remove it from the list when it's finished
+        games[:] = [game for game in games if advance_game(game)]
 
 
 def chron_get_lineup(timestamp: str, team: dict):

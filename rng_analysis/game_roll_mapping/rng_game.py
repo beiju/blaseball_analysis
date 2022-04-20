@@ -339,12 +339,22 @@ class BaseHit(PitchEvent):
         )
 
 
-class GroundOut(PitchEvent):
+class FieldingOutEvent(PitchEvent):
     def __init__(self, batter: dict, pitcher: dict, possible_fielders: List[int]):
         super().__init__(batter, pitcher)
         # Should always be a list of one until we get to late expansion
         self.possible_fielders = possible_fielders
 
+    def check_fielder(self, fielder, rng):
+        if int(fielder * 9) not in self.possible_fielders:
+            print(
+                "ERROR @ {}: ground out rolled {}, wrong fielder".format(
+                    rng.get_state_str(), fielder
+                )
+            )
+
+
+class GroundOut(FieldingOutEvent):
     def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         # This line must be first
         common = self.apply_common(rng, update, prev_update)
@@ -366,12 +376,7 @@ class GroundOut(PitchEvent):
             if 2 in prev_update['basesOccupied']:
                 rng.next()  # rgsots check??
 
-        if int(fielder * 9) not in self.possible_fielders:
-            print(
-                "ERROR @ {}: ground out rolled {}, wrong fielder".format(
-                    rng.get_state_str(), fielder
-                )
-            )
+        self.check_fielder(fielder, rng)
 
         return EventInfo(
             event_type=EventType.HomeRun,
@@ -382,6 +387,38 @@ class GroundOut(PitchEvent):
             one_val=one,
             hit_val=hit,
             three_val=three,
+            **common
+        )
+
+
+class Flyout(FieldingOutEvent):
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
+        # This line must be first
+        common = self.apply_common(rng, update, prev_update)
+
+        strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "go")
+        contact = rng.next()
+        fair = rng.next()
+        one = rng.next()
+        hit = rng.next()
+        fielder = rng.next()
+        rng.next()  # not gonna call this three bc it's after the fielder roll
+
+        if not prev_update['halfInningOuts'] == 2:
+            # This is the "runner advance" check
+            if prev_update['basesOccupied']:
+                rng.next()
+
+        self.check_fielder(fielder, rng)
+
+        return EventInfo(
+            event_type=EventType.HomeRun,
+            strike_zone_val=strike,
+            swing_val=swing,
+            contact_val=contact,
+            foul_val=fair,
+            one_val=one,
+            hit_val=hit,
             **common
         )
 
@@ -427,16 +464,23 @@ class Birds(Event):
 def strike_looking(update: dict, batting_team: TeamInfo,
                    pitching_team: TeamInfo) -> Parser:
     batter = batting_team.active_batter()
-    return string(
-        f"Strike, looking. {update['atBatBalls']}-{update['atBatStrikes']}"
+    if batter is None:
+        return fail("No batter")
+
+    return alt(
+        string(f"Strike, looking. {update['atBatBalls']}-{update['atBatStrikes']}"),
+        string(f"{batter['name']} strikes out looking.")
     ).map(lambda _: StrikeLooking(batter=batter, pitcher=pitching_team.pitcher))
 
 
 def strike_swinging(update: dict, batting_team: TeamInfo,
                     pitching_team: TeamInfo) -> Parser:
     batter = batting_team.active_batter()
-    return string(
-        f"Strike, swinging. {update['atBatBalls']}-{update['atBatStrikes']}"
+    if batter is None:
+        return fail("No batter")
+    return alt(
+        string(f"Strike, swinging. {update['atBatBalls']}-{update['atBatStrikes']}"),
+        string(f"{batter['name']} struck out swinging.")
     ).map(
         lambda _: StrikeSwinging(batter=batter, pitcher=pitching_team.pitcher))
 
@@ -452,8 +496,12 @@ def foul_ball(update: dict, batting_team: TeamInfo,
 def ball(update: dict, batting_team: TeamInfo,
          pitching_team: TeamInfo) -> Parser:
     batter = batting_team.active_batter()
-    return string(
-        f"Ball. {update['atBatBalls']}-{update['atBatStrikes']}"
+    if batter is None:
+        return fail("No batter")
+
+    return alt(
+        string(f"Ball. {update['atBatBalls']}-{update['atBatStrikes']}"),
+        string(f"{batter['name']} draws a walk.")
     ).map(lambda _: Ball(batter=batter, pitcher=pitching_team.pitcher))
 
 
@@ -479,7 +527,7 @@ def birds() -> Parser:
     ).map(lambda _: Birds())
 
 
-def ground_out(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
+def ground_out(batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     batter = batting_team.active_batter()
     if batter is None:
         return fail("No batter")
@@ -491,6 +539,20 @@ def ground_out(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInf
     ).map(lambda name: GroundOut(batter=batter, pitcher=pitching_team.pitcher,
                                  possible_fielders=[i for i, f in enumerate(pitching_team.lineup)
                                                     if f['name'] == name]))
+
+
+def flyout(batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
+    batter = batting_team.active_batter()
+    if batter is None:
+        return fail("No batter")
+
+    return (
+            string(f"{batter['name']} hit a flyout to ") >>
+            alt(*[string(fielder['name']) for fielder in pitching_team.lineup])
+            << string(".")
+    ).map(lambda name: Flyout(batter=batter, pitcher=pitching_team.pitcher,
+                              possible_fielders=[i for i, f in enumerate(pitching_team.lineup)
+                                                 if f['name'] == name]))
 
 
 def base_hit(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
@@ -536,8 +598,8 @@ def fielders_choice(prev_update: dict, batting_team: TeamInfo, pitching_team: Te
             string(f"{batter['name']} reaches on fielder's choice. ") >>
             alt(*[string(
                 f"{batting_team.batter_by_id(runner)['name']} out at {base_name(base + 1)} base.")
-                  for runner, base
-                  in zip(prev_update['baseRunners'], prev_update['basesOccupied'])])
+                for runner, base
+                in zip(prev_update['baseRunners'], prev_update['basesOccupied'])])
             << alt(
         eof,
         # I think only one player can score on an FC
@@ -559,9 +621,10 @@ def parser(update: dict, prev_update: dict,
         ball(update, batting_team, pitching_team),
         home_run(update, batting_team, pitching_team),
         strike_swinging(update, batting_team, pitching_team),
-        ground_out(prev_update, batting_team, pitching_team),
+        ground_out(batting_team, pitching_team),
         base_hit(prev_update, batting_team, pitching_team),
-        fielders_choice(prev_update, batting_team, pitching_team)
+        fielders_choice(prev_update, batting_team, pitching_team),
+        flyout(batting_team, pitching_team)
     )
 
 

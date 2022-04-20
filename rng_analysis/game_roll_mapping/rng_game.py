@@ -2,7 +2,7 @@ import math
 from abc import ABC
 from dataclasses import dataclass, field, asdict
 from enum import Enum, auto
-from typing import List, Optional, Generator
+from typing import List, Optional, Generator, Tuple
 
 import pandas as pd
 import requests_cache
@@ -11,6 +11,29 @@ from blaseball_mike.session import _SESSIONS_BY_EXPIRY
 from parsy import string, Parser, alt, eof, fail, regex
 
 from nd.rng import Rng
+
+
+@dataclass
+class GameDay:
+    rng_state: Tuple[Tuple[int, int], int]
+    game_ids: List[str]
+    start_time: Optional[str] = field(default=None)
+    pull_data_at: Optional[str] = field(default=None)
+
+
+DAYS = [
+    GameDay(rng_state=((6293080272763260934, 11654195519702723052), 60),
+            game_ids=['aa1b7fde-f077-4e4b-825f-0d1538d02822']),
+    # 111
+    GameDay(rng_state=((2009851709471025379, 7904764474545764681), 8),
+            game_ids=['ea55d541-1abe-4a02-8cd8-f62d1392226b']),
+    # 112
+    GameDay(rng_state=((16992747869295392778, 489180923418420395), 38),
+            game_ids=['731e7e33-4cd3-47de-b9fe-850d7131c4d6']),
+    # 113
+    GameDay(rng_state=((12352002204426442393, 16214116944942565884), 48),
+            game_ids=['b38e0917-43da-470c-a7bb-5712368a2492']),
+]
 
 BIRDS_WEATHER = 11
 
@@ -50,12 +73,12 @@ ATTRIBUTES = [
 ]
 
 
-def chron_get_by_key(type_: str, first_update: dict, key: str):
+def chron_get_by_key(type_: str, first_update: dict, timestamp: str, key: str):
     items = {item['entityId']: item['data'] for item in chronicler.v2.get_entities(
         type_=type_,
         id_=[first_update['data']['home' + key],
              first_update['data']['away' + key]],
-        at=first_update['timestamp'],
+        at=timestamp,
         cache_time=None,
     )}
 
@@ -635,8 +658,10 @@ class CaughtStealing(Event):
 
         steal_roll = rng.next()
         rng.next()  # steal success
-        rng.next()  # ???
-        rng.next()  # ???
+        # unsure why this should matter but ???it fits data??
+        if len(prev_update['baseRunners']) == 1:
+            rng.next()
+            rng.next()
 
         return EventInfo(
             event_type=EventType.CaughtStealing,
@@ -880,7 +905,7 @@ def caught_stealing(prev_update: dict, batting_team: TeamInfo, pitching_team: Te
     ]).map(lambda thief: CaughtStealing(batter=thief, pitcher=pitching_team.pitcher))
 
 
-def parser(update: dict, prev_update: dict,
+def parser(update: dict, prev_update: Optional[dict],
            batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     return alt(
         string("Play ball!").map(lambda _: PlayBall()),
@@ -911,7 +936,7 @@ def apply_game_update(update: dict, prev_update: dict, rng: Rng, home: TeamInfo,
     print(update_data['lastUpdate'])
 
     # Top of inning resets 1 event too quickly
-    if prev_update_data is None or prev_update_data['topOfInning']:
+    if update_data['topOfInning'] if prev_update_data is None else prev_update_data['topOfInning']:
         p = parser(update_data, prev_update_data, away, home)
     else:
         p = parser(update_data, prev_update_data, home, away)
@@ -936,15 +961,19 @@ def init_vibes(team: TeamInfo, day: int):
         batter['vibes'] = vibes(batter, day)
 
 
-def game_generator(game_id) -> GameGenerator:
+def game_generator(game_id, start_time: Optional[str], pull_data_at: Optional[str]) -> GameGenerator:
     game_updates = chronicler.get_game_updates(
         game_ids=game_id,
+        after=start_time,
         cache_time=None
     )
-    home_team, away_team = chron_get_by_key("team", game_updates[0], "Team")
-    home_pitcher, away_pitcher = chron_get_by_key("player", game_updates[0], "Pitcher")
-    home_lineup = chron_get_lineup(game_updates[0]['timestamp'], home_team)
-    away_lineup = chron_get_lineup(game_updates[0]['timestamp'], away_team)
+    if pull_data_at is None:
+        pull_data_at = game_updates[0]['timestamp']
+
+    home_team, away_team = chron_get_by_key("team", game_updates[0], pull_data_at, "Team")
+    home_pitcher, away_pitcher = chron_get_by_key("player", game_updates[0], pull_data_at, "Pitcher")
+    home_lineup = chron_get_lineup(pull_data_at, home_team)
+    away_lineup = chron_get_lineup(pull_data_at, away_team)
 
     home = TeamInfo(team=home_team, pitcher=home_pitcher,
                     lineup=home_lineup)
@@ -954,9 +983,19 @@ def game_generator(game_id) -> GameGenerator:
     init_vibes(home, game_updates[0]['data']['day'])
     init_vibes(away, game_updates[0]['data']['day'])
 
+    if start_time is not None:
+        upd = chronicler.get_game_updates(
+            game_ids=game_id,
+            before=start_time,
+            count=1,
+            order="desc"
+        )
+        prev_update = upd[0]
+    else:
+        prev_update = None
+
     data_rows = []
-    prev_update = None
-    for update in game_updates:
+    for i, update in enumerate(game_updates):
         # This is a fun inversion
         game_rng = yield
 
@@ -966,7 +1005,8 @@ def game_generator(game_id) -> GameGenerator:
 
         # There's a missing event here and by counting the rolls it seems to be a foul with a
         # basestealing check (7 rolls). TODO Restructure the code so I can insert a deduced event
-        if update["hash"] == "50140ef4-ef62-dbd6-8b52-937fc8d4002e":
+        if update["hash"] in ["50140ef4-ef62-dbd6-8b52-937fc8d4002e",
+                              "e5b743d3-0a26-63c9-7781-fac2e8705c5b"]:
             print("Advancing past deduced foul", update["data"]["_id"])
             game_rng.step(7)
 
@@ -977,6 +1017,7 @@ def game_generator(game_id) -> GameGenerator:
         if update["data"]["homeBatter"]:
             home.active_batter_id = update["data"]["homeBatter"]
 
+        print(i, end=' ')
         event_info = apply_game_update(update, prev_update, game_rng, home, away)
         if event_info is not None:
             data_rows.append(event_info)
@@ -988,24 +1029,16 @@ def game_generator(game_id) -> GameGenerator:
 
 
 def main():
-    days = [
-        (((2009851709471025379, 7904764474545764681), 8), ['ea55d541-1abe-4a02-8cd8-f62d1392226b']),
-        (
-        ((16992747869295392778, 489180923418420395), 38), ['731e7e33-4cd3-47de-b9fe-850d7131c4d6']),
-        (((12352002204426442393, 16214116944942565884), 48),
-         ['b38e0917-43da-470c-a7bb-5712368a2492']),
-    ]
-
-    for i, (rng_start, game_id) in enumerate(days):
+    for i, day in enumerate(DAYS):
         print(f"Starting {i + 1}th game")
-        run_day(rng_start, game_id)
+        run_day(day)
 
 
-def run_day(rng_start, game_ids):
-    game_rng = Rng(*rng_start)
+def run_day(day: GameDay):
+    game_rng = Rng(*day.rng_state)
     game_rng.step(-1)
 
-    games = [game_generator(game_id) for game_id in game_ids]
+    games = [game_generator(game_id, day.start_time, day.pull_data_at) for game_id in day.game_ids]
 
     # Start all the generators
     for game in games:

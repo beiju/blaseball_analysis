@@ -100,6 +100,7 @@ class EventType(Enum):
     CaughtStealing = auto()
     FieldersChoice = auto()
     DoublePlay = auto()
+    Sacrifice = auto()
 
 
 @dataclass(init=True)
@@ -581,6 +582,39 @@ class DoublePlay(PitchEvent):
         )
 
 
+class Sacrifice(PitchEvent):
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
+        # This line must be first
+        common = self.apply_common(rng, update, prev_update)
+
+        strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "go")
+        contact = rng.next()
+        fair = rng.next()
+        one = rng.next()
+        hit = rng.next()
+        three = rng.next()
+        four = rng.next()
+        five = rng.next()
+        six = rng.next()
+        zeven = rng.next()
+
+        return EventInfo(
+            event_type=EventType.Sacrifice,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
+            contact_roll=contact,
+            foul_roll=fair,
+            unknown_roll_1=one,
+            hit_or_out_roll=hit,
+            unknown_roll_2=three,
+            unknown_roll_3=four,
+            unknown_roll_4=five,
+            unknown_roll_5=six,
+            unknown_roll_6=zeven,
+            **common
+        )
+
+
 class Steal(Event):
     def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         weather_roll = weather_check(rng, update['weather'])
@@ -710,6 +744,8 @@ def birds() -> Parser:
         string("Several birds are pecking..."),
         string("This is too many birds."),
         string("The birds are very loud!"),
+        string("The birds are paralyzed! They can't move!"),
+        string("The birds continue to stare."),
         regex(r"\d{1,4}").map(int) << string(" Birds")
     ).map(lambda _: Birds())
 
@@ -754,7 +790,9 @@ def base_hit(prev_update: dict, batting_team: TeamInfo, pitching_team: TeamInfo)
             << string("!")
             << alt(
         eof,
-        string(" 1 scores.")
+        string(" 1 scores."),
+        string(" 2s score."),
+        string(" 3s score.")
     )
     ).map(lambda hit_type: BaseHit(batter=batter, pitcher=pitching_team.pitcher,
                                    bases_occupied=prev_update['basesOccupied'], hit_type=hit_type))
@@ -799,10 +837,24 @@ def double_play(batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
     if batter is None:
         return fail("No active batter")
 
-    # man the auto-formatter really just doesnt know what to do with this one
     return string(
         f"{batter['name']} hit into a double play!"
     ).map(lambda _: DoublePlay(batter=batter, pitcher=pitching_team.pitcher))
+
+
+def sacrifice(prev_update: Optional[dict], batting_team: TeamInfo, pitching_team: TeamInfo) -> Parser:
+    if prev_update is None:
+        return fail("Can't score on a sacrifice before the game starts")
+    if not prev_update['baseRunners']:
+        return fail("Can't score on a sacrifice if nobody's on base")
+
+    batter = batting_team.active_batter()
+    if batter is None:
+        return fail("No active batter")
+
+    return string(
+        f"{batting_team.batter_by_id(prev_update['baseRunners'][-1])['name']}  scores on the sacrifice."
+    ).map(lambda _: Sacrifice(batter=batter, pitcher=pitching_team.pitcher))
 
 
 def steal_helper(batting_team: TeamInfo, runner_id: str, base: int, intertext: str,
@@ -852,6 +904,7 @@ def parser(update: dict, prev_update: dict,
         steal(prev_update, batting_team, pitching_team),
         caught_stealing(prev_update, batting_team, pitching_team),
         double_play(batting_team, pitching_team),
+        sacrifice(prev_update, batting_team, pitching_team),
         string("Game over.").map(lambda _: GameOver()),
     )
 

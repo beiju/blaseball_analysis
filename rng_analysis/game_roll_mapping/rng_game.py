@@ -1070,6 +1070,9 @@ def game_generator(game_id, start_time: Optional[str],
                               "e5b743d3-0a26-63c9-7781-fac2e8705c5b"]:
             print("Advancing past deduced foul", update["data"]["_id"])
             game_rng.step(7)
+        elif update["hash"] == 'c99e8d4f-4306-0174-4027-8547d0594d36':
+            print("Advancing past 2 consecutive deduced fouls")
+            game_rng.step(12)
 
         # Must persist active batter because sometimes it goes away while we
         # still need it (e.g. home runs)

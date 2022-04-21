@@ -30,7 +30,7 @@ DAYS = [
     GameDay(rng_state=((6293080272763260934, 11654195519702723052), 60),
             game_ids=['aa1b7fde-f077-4e4b-825f-0d1538d02822']),
     # 111
-    GameDay(rng_state=((2009851709471025379, 7904764474545764681), 8),
+    GameDay(rng_state=((17566190603851880960, 15992894597385991666), 26),
             game_ids=['ea55d541-1abe-4a02-8cd8-f62d1392226b']),
     # 112
     GameDay(rng_state=((16992747869295392778, 489180923418420395), 38),
@@ -1112,13 +1112,9 @@ def game_generator(game_id, start_time: Optional[str],
     data_rows = []
     for i, update in enumerate(game_updates):
         # This is a fun inversion
-        game_rng = yield
+        game_rng = yield update["timestamp"]
 
-        # We don't know why these offsets are required
         update_id = update["data"]['_id'] if '_id' in update['data'] else update['data']['id']
-        # This is legacy and it shouldn't work but it does
-        if update_id == "ad3f8b4a-7914-b7cb-17cb-e5f52929db8c":
-            game_rng.step(1)
 
         # There's a missing event here and by counting the rolls it seems to be a foul with a
         # basestealing check (7 rolls). TODO Restructure the code so I can insert a deduced event
@@ -1127,14 +1123,16 @@ def game_generator(game_id, start_time: Optional[str],
             print("Advancing past deduced foul with baserunner")
             game_rng.step(7)
         elif update["hash"] in ['6c058a18-1f49-7c83-d422-7bb0ba668e94',
-                                'aecb72e1-c132-435e-406b-e26fc5e098a3',
+                                'ccdc2eae-4e27-c57e-941e-ef51650db48b',
                                 '643860d1-bac7-894e-9f04-b1f73c077e00']:
             print("Advancing past deduced foul")
             game_rng.step(6)
-            game_rng = yield
         elif update["hash"] == 'c99e8d4f-4306-0174-4027-8547d0594d36':
             print("Advancing past 2 consecutive deduced fouls")
             game_rng.step(12)
+        elif update["hash"] == 'ad3f8b4a-7914-b7cb-17cb-e5f52929db8c':
+            print("Advancing past 3 consecutive deduced fouls (hi fish)")
+            game_rng.step(18)
         elif update["hash"] == '4dcc8d09-6a69-2cc3-8a0e-a6b05c937858':
             print("Advancing past ground out advancement")
             game_rng.step(2)
@@ -1171,21 +1169,17 @@ def run_day(day: GameDay):
 
     games = [game_generator(game_id, day.start_time, day.pull_data_at) for game_id in day.game_ids]
 
-    # Start all the generators
-    for game in games:
-        next(game)
-
-    def advance_game(g: GameGenerator) -> bool:
-        try:
-            g.send(game_rng)
-        except StopIteration:
-            return False
-
-        return True
+    # Start all the generators and get the first event timestamps
+    games = [(next(game), game) for game in games]
 
     while games:
-        # Advance the game and remove it from the list when it's finished
-        games[:] = [game for game in games if advance_game(game)]
+        (i, (prev_timestamp, game)) = min(enumerate(games), key=lambda g: g[1][0])
+        try:
+            next_timestamp = game.send(game_rng)
+        except StopIteration:
+            games.pop(i)
+        else:
+            games[i] = (next_timestamp, game)
 
     game_rng.step(3)
     print("Next day start state should be", game_rng.get_state_str())

@@ -13,10 +13,10 @@ def main():
     df = df[~df['pitch_in_strike_zone_roll'].isnull()]
 
     # Only on pitches in/out of the strike zone
-    df = df[df['pitch_in_strike_zone_roll'] < 0.35 * (1 + df['pitcher.ruthlessness'])]
+    df = df[df['pitch_in_strike_zone_roll'] > 0.35 * (1 + df['pitcher.ruthlessness'])]
 
     # Traj doesn't have enough variety. Filter to only batters with traj of 0.1
-    df = df[df['batter.tragicness'] == 0.1]
+    # df = df[df['batter.tragicness'] == 0.1]
 
     # Get rid of fouls
     df = df[df['event_type'] != "EventType.Foul"]
@@ -35,8 +35,9 @@ def main():
     pitcher_attrs = [col for col in df if col.startswith('pitcher.')]
 
     # samples = df[['pitch_in_strike_zone_roll', 'pitcher.ruthlessness', 'pitcher.unthwackability']]
-    samples = df[['batter_swings_roll', "batter.moxie", "batter.thwackability", "batter.vibes", "pitcher.vibes"]]
-    # samples = df[['batter_swings_roll', *batter_attrs]]
+    samples = df[['batter_swings_roll', "batter.moxie", "batter.thwackability", "batter.vibes", "pitcher.vibes", 'pitcher.coldness']]
+    # samples = df[['batter_swings_roll', *batter_attrs, 'pitcher.coldness', 'pitcher.vibes']]
+    # samples = df[['batter_swings_roll', *batter_attrs, *pitcher_attrs]]
     in_strike_zone = df['event_type'] == "EventType.StrikeLooking"
 
     batter_swung = (
@@ -54,7 +55,7 @@ def main():
 
     X = np.array(samples)
     y = ~np.array(batter_swung)
-    clf = LinearSVC(verbose=True, tol=1e-10, penalty='l1', dual=False, max_iter=1e8)
+    clf = LinearSVC(verbose=True, tol=1e-10, penalty='l1', dual=False, max_iter=1e8, C=0.1)
     fit = clf.fit(X, y)
 
     y_pred = clf.predict(X)

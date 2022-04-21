@@ -22,6 +22,11 @@ class GameDay:
 
 
 DAYS = [
+    # 108. two games. fear
+    GameDay(rng_state=((5533805311492506700, 15692468723559200702), 48),
+            game_ids=['5bb9abd8-96a1-4edf-9fce-1c227f79bd1a',
+                      '8f6ca425-6bc0-493f-99d8-3fc145e265a9'],
+            start_time="2020-08-08T21:14:03Z"),
     GameDay(rng_state=((6293080272763260934, 11654195519702723052), 60),
             game_ids=['aa1b7fde-f077-4e4b-825f-0d1538d02822']),
     # 111
@@ -476,12 +481,11 @@ class GroundOut(FieldingOutEvent):
         fielder = rng.next()
 
         if not prev_update['halfInningOuts'] == 2:
-            # This is the "runner advance" check
-            if prev_update['basesOccupied']:
+            for base in prev_update['basesOccupied']:
                 rng.next()
 
-            if 2 in prev_update['basesOccupied']:
-                rng.next()  # rgsots check??
+                if base == 2:
+                    rng.next()  # sac fly roll?
 
         self.check_fielder(fielder, rng)
 
@@ -637,6 +641,35 @@ class Sacrifice(PitchEvent):
         )
 
 
+class SacScore(PitchEvent):
+    def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
+        # This line must be first
+        common = self.apply_common(rng, update, prev_update)
+
+        strike, swing = strike_swing_check(rng, self.pitcher, self.batter, "go")
+        contact = rng.next()
+        fair = rng.next()
+        one = rng.next()
+        hit = rng.next()
+        three = rng.next()
+        four = rng.next()
+        five = rng.next()
+
+        return EventInfo(
+            event_type=EventType.Sacrifice,
+            pitch_in_strike_zone_roll=strike,
+            batter_swings_roll=swing,
+            contact_roll=contact,
+            foul_roll=fair,
+            unknown_roll_1=one,
+            hit_or_out_roll=hit,
+            unknown_roll_2=three,
+            unknown_roll_3=four,
+            unknown_roll_4=five,
+            **common
+        )
+
+
 class Steal(Event):
     def apply(self, rng: Rng, update: dict, prev_update: dict) -> Optional[EventInfo]:
         weather_roll = weather_check(rng, update['weather'])
@@ -770,6 +803,7 @@ def birds() -> Parser:
         string("The birds are very loud!"),
         string("The birds are paralyzed! They can't move!"),
         string("The birds continue to stare."),
+        string("Oh dear Gods..."),
         regex(r"\d{1,4}").map(int) << string(" Birds")
     ).desc("Birds").map(lambda _: Birds())
 
@@ -878,8 +912,25 @@ def sacrifice(prev_update: Optional[dict], batting_team: TeamInfo,
         return fail("No active batter")
 
     return string(
-        f"{batting_team.batter_by_id(prev_update['baseRunners'][-1])['name']}  scores on the sacrifice."
+        f"{batting_team.batter_by_id(prev_update['baseRunners'][0])['name']}  scores on the sacrifice."
     ).map(lambda _: Sacrifice(batter=batter, pitcher=pitching_team.pitcher))
+
+
+def sac_score(prev_update: Optional[dict], batting_team: TeamInfo,
+            pitching_team: TeamInfo) -> Parser:
+    if prev_update is None:
+        return fail("Can't score on a sacrifice before the game starts")
+    if not prev_update['baseRunners']:
+        return fail("Can't score on a sacrifice if nobody's on base")
+
+    batter = batting_team.active_batter()
+    if batter is None:
+        return fail("No active batter")
+
+    return string(
+        f"{batter['name']} hit a sacrifice fly. " +
+        f"{batting_team.batter_by_id(prev_update['baseRunners'][0])['name']} tags up and scores!"
+    ).map(lambda _: SacScore(batter=batter, pitcher=pitching_team.pitcher))
 
 
 def steal_helper(batting_team: TeamInfo, runner_id: str, base: int, intertext: str,
@@ -924,7 +975,7 @@ class Incineration(Event):
         )
 
 
-def apply_incineration(victim_team: TeamInfo, timestamp: str,
+def apply_incineration(victim_team: TeamInfo, timestamp: str, day: int,
                        victim_name: str, replacement_name: str) -> Incineration:
     slot = next(i for i, p in enumerate(victim_team.lineup) if p['name'] == victim_name)
     victim_id = victim_team.lineup[slot]['_id']
@@ -946,6 +997,7 @@ def apply_incineration(victim_team: TeamInfo, timestamp: str,
         cache_time=None,
     ))["data"]
     assert new_player["name"] == replacement_name
+    new_player['vibes'] = vibes(new_player, day)
     victim_team.lineup[slot] = new_player
 
     return Incineration()
@@ -959,7 +1011,8 @@ def incineration(update: dict, pitching_team: TeamInfo) -> Parser:
         alt(*[string(player['name']) for player in pitching_team.lineup])
         << string("! Replaced by "),
         regex(".*$")
-    ).map(lambda res: apply_incineration(pitching_team, update["timestamp"], res[0], res[1]))
+    ).map(lambda res: apply_incineration(pitching_team, update["timestamp"], update['day'],
+                                         res[0], res[1]))
 
 
 def parser(update: dict, prev_update: Optional[dict],
@@ -982,6 +1035,7 @@ def parser(update: dict, prev_update: Optional[dict],
         caught_stealing(prev_update, batting_team, pitching_team),
         double_play(batting_team, pitching_team),
         sacrifice(prev_update, batting_team, pitching_team),
+        sac_score(prev_update, batting_team, pitching_team),
         string("Game over.").map(lambda _: GameOver()),
         incineration(update, pitching_team),
     )
@@ -1061,18 +1115,29 @@ def game_generator(game_id, start_time: Optional[str],
         game_rng = yield
 
         # We don't know why these offsets are required
-        if update["data"].get("_id", None) == "ad3f8b4a-7914-b7cb-17cb-e5f52929db8c":
+        update_id = update["data"]['_id'] if '_id' in update['data'] else update['data']['id']
+        # This is legacy and it shouldn't work but it does
+        if update_id == "ad3f8b4a-7914-b7cb-17cb-e5f52929db8c":
             game_rng.step(1)
 
         # There's a missing event here and by counting the rolls it seems to be a foul with a
         # basestealing check (7 rolls). TODO Restructure the code so I can insert a deduced event
         if update["hash"] in ["50140ef4-ef62-dbd6-8b52-937fc8d4002e",
                               "e5b743d3-0a26-63c9-7781-fac2e8705c5b"]:
-            print("Advancing past deduced foul", update["data"]["_id"])
+            print("Advancing past deduced foul with baserunner")
             game_rng.step(7)
+        elif update["hash"] in ['6c058a18-1f49-7c83-d422-7bb0ba668e94',
+                                'aecb72e1-c132-435e-406b-e26fc5e098a3',
+                                '643860d1-bac7-894e-9f04-b1f73c077e00']:
+            print("Advancing past deduced foul")
+            game_rng.step(6)
+            game_rng = yield
         elif update["hash"] == 'c99e8d4f-4306-0174-4027-8547d0594d36':
             print("Advancing past 2 consecutive deduced fouls")
             game_rng.step(12)
+        elif update["hash"] == '4dcc8d09-6a69-2cc3-8a0e-a6b05c937858':
+            print("Advancing past ground out advancement")
+            game_rng.step(2)
 
         # Must persist active batter because sometimes it goes away while we
         # still need it (e.g. home runs)
@@ -1081,7 +1146,9 @@ def game_generator(game_id, start_time: Optional[str],
         if update["data"]["homeBatter"]:
             home.active_batter_id = update["data"]["homeBatter"]
 
-        print(i, end=' ')
+        game_rng.step(1)
+        print(update["timestamp"][14:19], update_id[:8], f"{i:>3}", game_rng.state[0], end=' - ')
+        game_rng.step(-1)
         event_info = apply_game_update(update, prev_update, game_rng, home, away)
         if event_info is not None:
             data_rows.append(event_info)

@@ -120,6 +120,9 @@ class Rng(object):
     def get_state_str(self) -> str:
         return state_str(self.state[0], self.state[1], self.offset)
 
+    def get_state_url(self) -> str:
+        return f"https://rng.sibr.dev/?s0={self.state[0]}&s1={self.state[1]}&offset={self.offset}"
+
     def dbg(self) -> str:
         val = self.value()
 

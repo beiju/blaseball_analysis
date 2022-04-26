@@ -13,7 +13,7 @@ def main():
     df = df[~df['pitch_in_strike_zone_roll'].isnull()]
 
     # Only on pitches in/out of the strike zone
-    df = df[df['pitch_in_strike_zone_roll'] > 0.35 * (1 + df['pitcher.ruthlessness'])]
+    df = df[df['pitch_in_strike_zone_roll'] < 0.35 * (1 + df['pitcher.ruthlessness'])]
 
     # Traj doesn't have enough variety. Filter to only batters with traj of 0.1
     # df = df[df['batter.tragicness'] == 0.1]
@@ -27,13 +27,19 @@ def main():
     # df = df[(df['event_type'] == "EventType.StrikeLooking") |
     #         (df['event_type'] == "EventType.StrikeSwinging")]
 
+    for key, group in df.groupby('pitcher.ruthlessness'):
+        print(f"Against pitcher with ruthlessness {key:.3f}, {len(group)} samples")
+        run_group(group)
+
+
+def run_group(df):
     batter_attrs = [col for col in df if col.startswith('batter.')]
     pitcher_attrs = [col for col in df if col.startswith('pitcher.')]
 
     # samples = df[['pitch_in_strike_zone_roll', 'pitcher.ruthlessness', 'pitcher.unthwackability']]
     # samples = df[['batter_swings_roll', "batter.moxie", "batter.thwackability", "batter.vibes", "pitcher.vibes", 'pitcher.coldness']]
     # samples = df[['batter_swings_roll', *batter_attrs, 'pitcher.coldness', 'pitcher.vibes']]
-    samples = df[['batter_swings_roll', *batter_attrs, *pitcher_attrs]]
+    samples = df[['batter_swings_roll', *batter_attrs]]
     in_strike_zone = df['event_type'] == "EventType.StrikeLooking"
 
     batter_swung = (
@@ -51,28 +57,28 @@ def main():
 
     X = np.array(samples)
     y = ~np.array(batter_swung)
-    clf = LinearSVC(verbose=True, tol=1e-10, penalty='l1', dual=False, max_iter=1e8, C=0.1)
+    clf = LinearSVC(verbose=True, tol=1e-10, max_iter=1e8)
     fit = clf.fit(X, y)
 
     y_pred = clf.predict(X)
     # y_pred = df['batter_swings_roll'] > 0.45 - 0.25 * df['batter.moxie']
 
-    n_errors = (y_pred ^ y).sum()
-    n_samples = y.shape[0]
-    print(f"Error: {n_errors / n_samples:.03} ({n_errors}/{n_samples})")
-    for category in df['event_type'].unique():
-        print(category, np.average(y_pred[df['event_type'] == category]))
-
-    print((df['batter_swings_roll'] - (0.45 - 0.25 * df['batter.moxie']))[y_pred ^ y])
-    print((df['event_type'])[y_pred ^ y])
+    # n_errors = (y_pred ^ y).sum()
+    # n_samples = y.shape[0]
+    # print(f"Error: {n_errors / n_samples:.03} ({n_errors}/{n_samples})")
+    # for category in df['event_type'].unique():
+    #     print(category, np.average(y_pred[df['event_type'] == category]))
+    #
+    # print((df['batter_swings_roll'] - (0.45 - 0.25 * df['batter.moxie']))[y_pred ^ y])
+    # print((df['event_type'])[y_pred ^ y])
 
     coeff = pd.Series(clf.coef_.squeeze(), samples.columns)
     coeff.sort_values(inplace=True, key=abs, ascending=False)
-    print("\nCoefficients:\n" + str(coeff))
-    print("Intercept:", clf.intercept_)
+    # print("\nCoefficients:\n" + str(coeff))
+    # print("Intercept:", clf.intercept_)
 
-    print("\nNormalized:\n" + str(coeff / -coeff['batter_swings_roll']))
-    print("Intercept:", clf.intercept_ / -coeff['batter_swings_roll'])
+    print("\nNormalized coefficients:\n" + str(coeff / -coeff['batter_swings_roll']))
+    print("Normalized intercept:", clf.intercept_ / -coeff['batter_swings_roll'])
 
 
 if __name__ == '__main__':

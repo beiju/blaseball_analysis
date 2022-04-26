@@ -17,11 +17,23 @@ from nd.rng import Rng
 class GameDay:
     rng_state: Tuple[Tuple[int, int], int]
     game_ids: List[str]
+    skip: int = field(default=0)
     start_time: Optional[str] = field(default=None)
     pull_data_at: Optional[str] = field(default=None)
 
 
 DAYS = [
+    # 103. four games. hubris!
+    GameDay(rng_state=((6123107629886474, 17247484357964131183), 15),
+            game_ids=[
+                '952de7c0-5b17-4e8f-8b56-caf01025a6a7',
+                'fabe1105-58b3-47c4-8bce-9d0824404141',
+                '1d8bc613-0ad4-4551-9570-27857e5cac42',
+                '7e23e6d3-911e-45a6-87d2-3a2efbcbae6f',
+            ],
+            skip=1,
+            # Starts at Langley Wheeler's incineration
+            start_time="2020-08-08T16:19:13.000Z"),
     # 108. two games. fear
     GameDay(rng_state=((5533805311492506700, 15692468723559200702), 48),
             game_ids=['5bb9abd8-96a1-4edf-9fce-1c227f79bd1a',
@@ -804,6 +816,7 @@ def birds() -> Parser:
         string("The birds are paralyzed! They can't move!"),
         string("The birds continue to stare."),
         string("Oh dear Gods..."),
+        string("There's just too many birds!"),
         regex(r"\d{1,4}").map(int) << string(" Birds")
     ).desc("Birds").map(lambda _: Birds())
 
@@ -917,7 +930,7 @@ def sacrifice(prev_update: Optional[dict], batting_team: TeamInfo,
 
 
 def sac_score(prev_update: Optional[dict], batting_team: TeamInfo,
-            pitching_team: TeamInfo) -> Parser:
+              pitching_team: TeamInfo) -> Parser:
     if prev_update is None:
         return fail("Can't score on a sacrifice before the game starts")
     if not prev_update['baseRunners']:
@@ -1075,7 +1088,7 @@ def init_vibes(team: TeamInfo, day: int):
 
 
 def game_generator(game_id, start_time: Optional[str],
-                   pull_data_at: Optional[str]) -> GameGenerator:
+                   pull_data_at: Optional[str], skip_first: bool) -> GameGenerator:
     game_updates = chronicler.get_game_updates(
         game_ids=game_id,
         after=start_time,
@@ -1098,16 +1111,23 @@ def game_generator(game_id, start_time: Optional[str],
     init_vibes(home, game_updates[0]['data']['day'])
     init_vibes(away, game_updates[0]['data']['day'])
 
-    if start_time is not None:
-        upd = chronicler.get_game_updates(
+    if start_time is not None and not skip_first:
+        prev_update = chronicler.get_game_updates(
             game_ids=game_id,
             before=start_time,
             count=1,
             order="desc"
-        )
-        prev_update = upd[0]
+        )[0]
     else:
         prev_update = None
+
+    if skip_first:
+        prev_update = game_updates.pop(0)
+
+    if prev_update is not None and prev_update["data"]["awayBatter"]:
+        away.active_batter_id = prev_update["data"]["awayBatter"]
+    if prev_update is not None and prev_update["data"]["homeBatter"]:
+        home.active_batter_id = prev_update["data"]["homeBatter"]
 
     data_rows = []
     for i, update in enumerate(game_updates):
@@ -1167,7 +1187,8 @@ def run_day(day: GameDay):
     game_rng = Rng(*day.rng_state)
     game_rng.step(-1)
 
-    games = [game_generator(game_id, day.start_time, day.pull_data_at) for game_id in day.game_ids]
+    games = [game_generator(game_id, day.start_time, day.pull_data_at, i < day.skip)
+             for i, game_id in enumerate(day.game_ids)]
 
     # Start all the generators and get the first event timestamps
     games = [(next(game), game) for game in games]
@@ -1180,6 +1201,9 @@ def run_day(day: GameDay):
             games.pop(i)
         else:
             games[i] = (next_timestamp, game)
+            # Temp hack: At this specific time, move the game to the end of the list
+            # if next_timestamp == '2020-08-08T16:19:29.172Z':
+            #     games.append(games.pop(i))
 
     game_rng.step(3)
     print("Next day start state should be", game_rng.get_state_str())

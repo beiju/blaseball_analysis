@@ -6,7 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/hypotheticals/data-s18" />
       <excludeFolder url="file://$MODULE_DIR$/hypotheticals/data-s18-partial" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 3.11 (blaseball_analysis2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

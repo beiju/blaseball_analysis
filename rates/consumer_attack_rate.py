@@ -3,13 +3,13 @@ from bisect import bisect_left
 from collections import defaultdict
 from datetime import datetime, timedelta
 
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 import numpy as np
 from blaseball_mike import eventually, models, chronicler, utils
 from dateutil.parser import parse
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
 
-from plot_utils import error_bounds
+from util.plot_utils import error_bounds
 
 EVENT_TYPES = {
     4,  # Stolen base
